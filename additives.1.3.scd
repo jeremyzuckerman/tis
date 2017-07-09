@@ -191,7 +191,7 @@ SynthDef(\flutter, {|inBus=100, direct=1, directLag=0.1, gate=1, atk=0.1, rel=0.
 ~addAmp = 0.2;
 ~timeScale = 1; //scales the attack time
 
-~instances1=50;
+~instances1=20;
 ~instances2 = 8;
 ~instances3 = 6;
 ~instances4 = 20;
@@ -213,7 +213,8 @@ inf.do{|i|
 (
 var cp;
 //cp = 63;
-cp = [62,63,65,67,70].midicps;
+//cp = [62,63,65,67,70].midicps;
+cp = [66, 68, 70, 71, 72, 74, 81, 81].midicps;
 
 ~additivesGrp=Group.new; //master Additives group
 ~addInternalGrps = Array.fill(8, {Group.new(~additivesGrp, \addToHead)}); //groups for each voice
@@ -228,7 +229,7 @@ var cp;
 //cp = 63;
 /*cp = [62,63,65,67,70].midicps;*/
 /*cp = [63,67,70].midicps;*/
-cp = Array.fill(4, 70).midicps;
+cp = Array.fill(4, 63).midicps;
 ~addInternalGrps[0].set(\cp, cp.choose, \pitchLag, 30);
 )
 
