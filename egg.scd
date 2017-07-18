@@ -6,6 +6,7 @@ gradually add detail
 - growing density / pch devitation
 - flutters in spatial areas (not always all 4 speakers)
 - gradually double with more complex waveform (can open up filter on these waveforms)
+- add reverb
 */
 
 (
@@ -45,7 +46,7 @@ SynthDef(\eggAdditive, { |outBus=0, masterLev=1, mlLag=1, centerPitch=67, cpLag=
 	);
 	env = EnvGen.kr(Env.asr(atk, amp, release, curve:[4, -4]), gate, doneAction:2);
 	outSig = (in-triLev)*env;
-	panner = PanAz.ar(4, outSig, (panPos+posOffset), level:1, width:2);
+	panner = PanAz.ar(4, LPF.ar(outSig, 20000), (panPos+posOffset), level:1, width:2);
 	Out.ar(outBus, panner*Lag2.kr(masterLev, mlLag))
 }).send(s);
 )
@@ -78,7 +79,7 @@ s.sendMsg(\g_new, ~eggAdditivesGrp=s.nextNodeID, 0, 0);
 	var cp, atk;
 
 	cp = ([66, 67, 68, 70, 71, 72, 74, 81, 81]+0.4).wchoose([5, 10, 5, 5, 1, 2, 10, 10, 10].normalizeSum);
-	atk = rrand(60, 60*6)*timeScale;
+	atk = rrand(60*3, 60*6)*timeScale;
 
 /*	s.sendMsg(\s_new, \eggAdditive, ~eggAddSynths[i], 0, ~eggAdditivesGrp, \centerPitch, cp*rrand(0.99, 1.01), \masterLev, 0.2, \panPos, outs.wrapAt(i), \atk, atk);*/
 	s.sendMsg(\s_new, \eggAdditive, ~eggAddSynths[i], 0, ~eggAdditivesGrp, \centerPitch, cp*rrand(0.99, 1.01), \masterLev, 0.2, \panPos, posArray[i], \atk, atk);
@@ -110,9 +111,11 @@ outs = #[0, 2, 3, 1]; //L, RS, LS, R
 	s.sendMsg(\n_set, ~eggAddSynths[i], \fmIndex, 0.025, \fmIndexLag, rrand(60, 60*4), \fmNoiseIndex, 0.025, \fmNoiseIndexLag, rrand(60, 60*4))
 }
 
+s.sendMsg(\n_set, ~eggAdditivesGrp, \gate, 0, \rel, 30)
+
 //SLOW ROTATION (how to make channels more distinct from each other?)
 (
-var panO, rotationDur=20;
+var panO, rotationDur=60;
 panO= 1; //also serves as rate. rotations per rotationDur
 ~ppo=~ppo+panO; //to increment
 

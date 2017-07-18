@@ -55,21 +55,41 @@ trigger = OSCFunc.new({|msg|
 	if(msg[1.value]==1)
 	{~sfTask.start;}
 	{
-		//~sfPolyphony.do{|i| ~sfPolyphonyVars[i].stop};
-		s.sendBundle(s.latency, [\n_set, ~gvGroup1, \rel, 0.01, \gate, 0]);
+		//s.sendMsg(\n_set, ~sfGroup, \gate, 0, \rel, 5);
+		~sfPolyphony.do{|i| ~sfPolyphonyVars[i].stop};
+		//s.sendBundle(s.latency, [\n_set, ~gvGroup1, \rel, 0.01, \gate, 0]);
 		//s.sendBundle(s.latency, [\g_freeAll, ~gvGroup1]);
-		~gvList.clear;
+		//~gvList.clear;*/
 	}
 }, "/sfPad/x", nil, 57121);
 ml = OSCFunc.new({|msg| masterLev=(msg[1].value.pow(2)+mlMin*mlMult) }, "/MasterLev/x", nil, 57121);
 density = OSCFunc.new({|msg| waitMult=((msg[1].value.pow(2))*22)+1 }, "/Density/x", nil, 57121);
 
 ~sfTask = Task{
+		var pchset;
+/*		pchset = [
+			#[9, 7, 5, 3, 2, 0, -5]
+			, #[3, 2, 0, -5, 3, 2, 0]
+			, #[7, 3, 0, 7, 3, 0, 7]
+			, #[3, 2, 0, 3, 2, 0, 0]
+			, #[5, 2, 0, 5, 2, 0, 5]
+		].wchoose(#[0.5, 1, 1, 1, 1].normalizeSum);*/
+		pchset = [
+			#[9, 7]
+			, #[7, 5]
+			, #[5,3]
+		].wchoose(#[1, 1, 1].normalizeSum);
+
+	pchset.post;
+
 	~sfPolyphony.do{|v|
 		~sfPolyphonyVars[v] = Task{
 			inf.do{
 				var node, marker, startPos;
-				var file;
+				var file, pchs;
+
+				//pchs = rrand(0.75, 1.25);
+				pchs = (pchset+0.4).wchoose(#[1, 0.1].normalizeSum);
 
 				file = [0, 1].wchoose([0, 0.7].normalizeSum);
 				// file = rrand(0, ~sfBuf.size-1);
@@ -80,7 +100,7 @@ density = OSCFunc.new({|msg| waitMult=((msg[1].value.pow(2))*22)+1 }, "/Density/
 				/*				masterLev.postln;
 				waitMult.postln;*/
 
-				s.sendBundle(s.latency, [\s_new, \sparseFilts, -1, 0, ~sfGroup, \bufnum, ~sfBuf[file].bufnum, \rate, rrand(0.75, 1.25), \atk, 0.1, \level, rrand(0.05, 0.3), \sendLev, rrand(0.02, 1), \masterLev, masterLev,\startPos, startPos, \panPos, rrand(-1.0, 1.0)]);
+				s.sendBundle(s.latency, [\s_new, \sparseFilts, -1, 0, ~sfGroup, \bufnum, ~sfBuf[file].bufnum, \rate, pchs.midiratio, \atk, 0.1, \level, rrand(0.05, 0.3), \sendLev, rrand(0.02, 1), \masterLev, masterLev,\startPos, startPos, \panPos, rrand(-1.0, 1.0)]);
 			}
 		}.start
 	}

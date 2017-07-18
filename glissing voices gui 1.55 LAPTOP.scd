@@ -7,70 +7,7 @@
 //1.3 added density control
 //1.2 implemented messaging style for increased efficiency. added a high pass filter. paired the reverb levels with the dynamics and panning.
 
-//synthdefs and buffers
-(
-//serge
-~gvFiles = [
-	"/Volumes/Projects/The Impermanent Sky/TIS Serge/Audio/061317 3 Rnd Hi Freq and Sparse Filt 1-R.aif",
-	"/Volumes/Projects/The Impermanent Sky/TIS Serge/Audio/061317 3 Rnd Hi Freq and Sparse Filt 1-L.aif",
-	"/Volumes/Projects/SERGE/Serge 041417/Audio/Serge 041417_01 copy.wav",
-	"/Volumes/Projects/SERGE/Serge 050615/Bounces/Serge 050615_mono.wav",
-	"/Volumes/Projects/SERGE/Serge 032315/Bounces/Serge 032315_mono.wav",
-	"/Volumes/Projects/The Impermanent Sky/TIS Serge/Audio/061317 1 Rnd FM 1-L.aif",
-	"/Volumes/Projects/The Impermanent Sky/TIS Serge/Audio/061317 1 Rnd FM 1-R.aif",
-	"/Volumes/Projects/The Impermanent Sky/TIS Serge/Audio/061417 1 Mod Waves-L.aif",
-	"/Volumes/Projects/The Impermanent Sky/TIS Serge/Audio/061417 1 Mod Waves-R.aif"
-//	"/Volumes/Projects/The Impermanent Sky/Audio/test.wav" //short file for testing
-];
-
-~bufArr = Array.fill(~gvFiles.size, {|i| Buffer.read(s, ~gvFiles[i])}); //a buffer for each soundfile. solves the occasional reciprocal error by preloading buffers
-
-/*SynthDef(\pb_quad_wSends, {|out=50, bufnum=0, rate=1, startPos=0, panPos=0, masterLev=1, lpCut=20, level=0.5, atk=0.01, dur=1, rel=0.01, send=16, sendLev=1, gate=1, loop=0|
-	var in, env;
-	env = Env.asr(atk, 1, rel, [4,-4]);
-	in = HPF.ar(LPF.ar(PlayBuf.ar(1, bufnum, BufRateScale.kr(bufnum)*rate, startPos:startPos, loop:loop, doneAction:2), Lag.kr(lpCut, 0.1)), 30);
-	env = EnvGen.kr(env, gate:gate, doneAction:2);
-	//dry:
-	Out.ar(out,
-		PanAz.ar(4, in, panPos, level*masterLev)
-		*
-		env;
-	);
-	//wet:
-	Out.ar(send,
-		PanAz.ar(4, in, panPos, level*sendLev*masterLev)
-		*
-		env
-	);
-}).send(s);*/
-
-SynthDef(\pb_quad_wSends, {|out=50, bufnum=0, rate=1, startPos=0, panPos=0, masterLev=1, lpCut=20000, level=0.5, atk=0.01, dur=1, rel=0.01, send=54, sendLev=1, gate=1, loop=0|
-	var in, env;
-	env = Env.asr(atk, 1, rel, [4,-4]);
-	in = HPF.ar(PlayBuf.ar(1, bufnum, BufRateScale.kr(bufnum)*rate, startPos:startPos, loop:loop, doneAction:2), 30);
-	env = EnvGen.kr(env, gate:gate, doneAction:2);
-	//dry:
-	Out.ar(out,
-		PanAz.ar(4, in, panPos, level*masterLev)
-		*
-		env;
-	);
-	//wet:
-	Out.ar(send,
-		PanAz.ar(4, in, panPos, level*sendLev*masterLev)
-		*
-		env
-	);
-}).send(s);
-
-SynthDef(\filter, {|in=50, out=0, sendIn=54, send=16, lpCut=20000|
-	var input, sendInput;
-	input = LPF.ar(In.ar(in, 4), Lag.kr(lpCut, 0.4));
-	sendInput = LPF.ar(In.ar(sendIn, 4), Lag.kr(lpCut, 0.4));
-	Out.ar(out, input);
-	Out.ar(send, sendInput);
-}).send(s);
-)
+//synthdefs and buffers (in tis synthdefs... file)
 
 (
 var flow, buttons, states;
@@ -81,7 +18,7 @@ var oscMl, lemurMl=1, lemurLpCut=20000, filterNode;
 ~gvRel=0.01;
 
 // send to the Lemur: iPad IP address
-~tisAddy = NetAddr.new("192.168.0.2", 8000); //Lemur receives on port 8000
+// ~tisAddy = NetAddr.new("169.254.23.107", 8000); //when using JZ Adhoc network
 
 ~tisAddy.sendMsg("/GvLev/x", 0);
 ~tisAddy.sendMsg("/MasterLev/x", 0);

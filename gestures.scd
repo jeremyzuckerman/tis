@@ -18,7 +18,7 @@ fork{
 
 	~gestureBuffers = Array.fill(~gestureFiles.size, {|i| Buffer.read(s, ~gestureFiles[i])}); //a buffer for each soundfile
 
-	0.4.wait; //WAIT FOR BUFFERS TO LOAD OR WON'T WORK
+	0.5.wait; //WAIT FOR BUFFERS TO LOAD OR WON'T WORK
 
 	~gestureFiles.size.do{|i| sfs[i].openRead(~gestureFiles[i]) };//must openRead the files
 	~gestureMarkerLists = Array.fill(~gestureFiles.size, {|i| sfs[i].extractMarkersAiff2(0)}); //0=samples (default), 1=seconds)
@@ -119,7 +119,7 @@ s.sendMsg(\g_new, ~gestureGroup, 0, 0); //create a group for the instrument
 		//marker.postln;startPos.postln;"".postln;
 /*		modeSw.postln;*/
 
-		s.sendBundle(s.latency, [\s_new, \gestures, node=s.nextNodeID, 0, ~gestureGroup, \bufnum, ~gestureBuffers[file].bufnum, \panPos, rrand(-1.0, 1.0), \startPos, startPos, \dryLev, rrand(0.1, 1), \sendLev, rrand(0.1, 0.5), \masterLev, masterLev, \hpCutoff, hpCutoff, \lpCLo, lpCLo,\lpCLo, lpCLo, \lpCutoff, lpCutoff, \atk, atkTime, \curve, curve]);
+		s.sendBundle(s.latency, [\s_new, \gestures, node=s.nextNodeID, 0, ~gestureGroup, \bufnum, ~gestureBuffers[file].bufnum, \panPos, rrand(-1.0, 1.0), \startPos, startPos, \dryLev, rrand(0.1, 1), \sendLev, rrand(0.1, 0.5), \masterLev, masterLev, \hpCutoff, hpCutoff, \lpCLo, lpCLo,\lpCLo, lpCLo, \lpCutoff, lpCutoff, \atk, atkTime, \curve, curve, \rate, 0.25]);
 
 		(markerDur/(~gestureFileSR[file])).wait; //wait till next marker
 
@@ -136,5 +136,6 @@ s.sendMsg(\g_new, ~gestureGroup, 0, 0); //create a group for the instrument
 	}
 }
 )
+
 
 //			s.sendBundle(s.latency, [\s_new, \pb_voiceMass, node=s.nextNodeID, 0, group, \bufnum, ~voiceMassBuffer[file].bufnum, \rate, rateVal, \startPos, startPos, \panPos, rrand(panLo, panHi), \gestureLev, gestureLev, \masterLev, masterLev, \dryLev, rrand(dryLo, dryHi), \sendLev, rrand(sendLo, sendHi), \send, sendBus, \atk, atk, \rel, rel, \curve, curve, \loop, loop]);

@@ -1,43 +1,6 @@
 //random mode <3
 //to do: make default GUI function that either 1) sends OSC to lemur GUI or 2) is built into the lemur GUI
 (
-var sfs;
-~vmFiles = [
-	"/Volumes/Projects/The Impermanent Sky/Eliza/TiS Eliza Extended Vox 04-29-17/EDITED/12 E_inhale exhale vow high pch_CLN.aif"
-	, "/Volumes/Projects/The Impermanent Sky/Eliza/TiS Eliza Extended Vox 04-29-17/EDITED/117 E_singing text montone more air.aif"
-	, "/Volumes/Projects/The Impermanent Sky/Eliza/TiS Eliza Extended Vox 04-29-17/EDITED/118 E_singing text monotone lower pch.aif"
-	, "/Volumes/Projects/The Impermanent Sky/Eliza/TiS Eliza Extended Vox 04-29-17/EDITED/119 E_singing text monotone vary pchs more air.aif"
-	, "/Volumes/Projects/The Impermanent Sky/Eliza/TiS Eliza Extended Vox 04-29-17/EDITED/120 E_singing text monotone w vib.aif"
-];
-
-~voiceMassBuffer = Array.fill(~vmFiles.size, {|i| Buffer.read(s, ~vmFiles[i])}); //a buffer for each soundfile. solves the occasional reciprocal error by preloading buffers
-sfs  = Array.fill(~vmFiles.size, {SoundFile.new});
-/*sfs.postln;*/
-~vmFiles.size.do{|i| sfs[i].openRead(~vmFiles[i]) };//must openRead the files
-~voiceMassMarkers = Array.fill(~vmFiles.size, {|i| sfs[i].extractMarkersAiff2(0)}); //0=samples (default), 1=seconds)
-
-//SynthDefs
-SynthDef(\pb_voiceMass, {|out=0, bufnum=0, rate=1, startPos=0, panPos=0, gestureLev=1, masterLev =0.5, atk=0.01, dur=1, rel=0.01, curve= -4, send=16, dryLev=1, sendLev=1, gate=1, loop=0, mlLag=0.01|
-	var in, env;
-	env = Env.asr(atk, 1, rel, curve);
-	in = HPF.ar(PlayBuf.ar(1, bufnum, BufRateScale.kr(bufnum)*rate, startPos:startPos, loop:loop, doneAction:2), 20);
-	env = EnvGen.kr(env, gate:gate, levelScale:gestureLev, doneAction:2);
-	//dry:
-	Out.ar(out,
-		PanAz.ar(4, in, panPos, dryLev*Lag2UD.kr(masterLev, mlLag))
-		*
-		env;
-	);
-	//wet:
-	Out.ar(send,
-		PanAz.ar(4, in, panPos, sendLev*Lag2UD.kr(masterLev, mlLag))
-		*
-		env
-	);
-}).send(s);
-)
-
-(
 //set default values in SC and Lemur!!! make button in Lemur which resest to defaults
 var vmWindow, compView1, compView2, vmFlow, compFlow1, compFlow2, listVal=0, states, densButtons, xposeButtons, densActions, xposeActions;
 var vmFileList, vmList, vmFilesBasename;
@@ -52,7 +15,7 @@ var densityPosts1, densityPosts2;
 ~xpGroup = s.nextNodeID;
 
 //lemur GUI
-~tisAddy = NetAddr.new("192.168.0.2", 8000); //Lemur receives on port 8000
+// ~tisAddy = NetAddr.new("169.254.23.107", 8000); //when using JZ Adhoc network
 //sends file names to lemur menu. size of menu automatically updates depending on size of file name items (array)
 vmFilesBasename = Array.fill(~vmFiles.size, {|i| ~vmFiles[i].basename});
 ~tisAddy.sendBundle(nil, [\Menu, "@items"]++vmFilesBasename++["random"]);

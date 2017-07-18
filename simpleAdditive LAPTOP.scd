@@ -1,42 +1,3 @@
-(
-SynthDef(\simpleAdditive, { |outBus=0, masterLev=1, mlLag=1, centerPitch=67, cpLag=0.1, atk=0.1, release=30, amp=1, gate=1, freqModRate=0.00001, fmModRateLag=30, fmIndex=0, fmNoiseIndex=0, fmIndexLag=30, fmNoiseIndexLag=30, amRate=0.0333333, amDepth=0, amLag=0.1|
-	var in, env, triLev=0.1;
-	var fmIndexMod;
-	var ampMod;
-	var outSig, phase;
-
-	phase = Rand(0, 2pi);
-
-	ampMod = SinOsc.ar(
-		amRate*rrand(0.99, 1.01)
-		, phase
-		, triLev*0.5
-		, triLev
-	)
-	*
-	Lag.kr(amDepth, amLag);
-	fmIndexMod = Lag.kr(fmIndex, fmIndexLag);
-	in = LFTri.ar(
-		Lag.kr(centerPitch.midicps, cpLag)
-		*
-		SinOsc.kr(
-			LFNoise2.kr(
-				Lag.kr(freqModRate, fmModRateLag)
-				, Lag.kr(fmNoiseIndex, fmNoiseIndexLag)
-			)
-			, 0
-			, fmIndexMod
-			, 1
-		)
-		, 0
-		, triLev+ampMod
-	);
-	env = EnvGen.kr(Env.asr(atk, amp, release, curve:[4, -4]), gate, doneAction:2);
-	outSig = (in-triLev)*env;
-	Out.ar(outBus, outSig*Lag2.kr(masterLev, mlLag))
-}).send(s);
-)
-
 //COUNTER:
 (
 fork{
@@ -52,11 +13,11 @@ fork{
 (
 //try a note in the middle
 var outs, fadesIn, polyphony=3;
-var timeScale = 2;
+var timeScale = 2, fadeTimeScale=1;
 
 ~saVoices = Array.fill(polyphony, {|i| 4*i}); //offsets the nodes to group as follows: nodes 1-4: low voice; nodes 5-8 middle voice; nodes 9-12:high voice
 
-fadesIn = #[30, 45, 60, 75]*timeScale;
+fadesIn = #[ 45, 67.5, 90, 112.5 ]*fadeTimeScale;
 outs = #[0, 2, 3, 1]; //L, RS, LS, R
 
 ~sAddSynths = Array.fill(4*polyphony, {s.nextNodeID}); //make node for each synth
@@ -115,7 +76,7 @@ s.sendBundle(s.latency,  arr[0], arr[1], arr[2], arr[3]);
 )
 
 4.do{|i|
-	s.sendMsg(\n_set, ~sAddSynths[i+8], \masterLev, 0.1, \mlLag, 0.1)
+	s.sendMsg(\n_set, ~sAddSynths[i+8], \masterLev, 0, \mlLag, 60)
 }
 
 
@@ -133,7 +94,7 @@ s.sendMsg(\n_set, ~sAdditivesGrp, \fmIndex, 100);
 s.sendMsg(\n_set, ~sAdditivesGrp, \fmModRateLag, 0.01);*/
 
 //5:
-s.sendMsg(\n_set, ~sAdditivesGrp, \mlLag, 60, \masterLev, 0.3) //change master level
+s.sendMsg(\n_set, ~sAdditivesGrp, \mlLag, 60, \masterLev, 0) //change master level
 
 s.sendMsg(\n_set, ~sAdditivesGrp, \gate, 0, \release, 1) //fade out and free
 
