@@ -12,6 +12,11 @@ var currentSR, currentBS, kill;
 	s.latency=0.05;
 	s.options.hardwareBufferSize = blockSize;
 	s.options.maxNodes=4096;
+	s.options.memSize = 16384;
+
+	//~tisAddy = NetAddr.new("192.168.0.2", 8000); //Lemur receives on port 8000
+	//~tisAddy = NetAddr.new("169.254.14.85", 8000); //when using JZ Adhoc network
+
 	//set up routing w plogue
 	fork{
 

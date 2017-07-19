@@ -9,7 +9,7 @@ var window, flow, samplerButton, threeDBut, particleWaves, names, killBut, three
 
 s.sendMsg(\g_new, ~samplerGroup=s.nextNodeID, 1, 0);
 
-window = Window("Glissing Voices", 500@500);
+window = Window("Sampler", 540@300);
 window.view.decorator = flow = FlowLayout(window.view.bounds, 20@20, 40@5);
 /*samplerButton = Button(window, 200@50)
 .states_([
@@ -51,7 +51,8 @@ samplerButton = Array.fill(~samplerFiles.size, {|i| Button(window, 200@50).state
 };
 killBut = Button(window, 200@50).states_([ ["STOP", Color.white, Color.red] ]);
 killBut.action = {
-	s.sendBundle(s.latency, [\n_set, ~samplerGroup, \gate, 0])
+	s.sendBundle(s.latency, [\n_set, ~samplerGroup, \gate, 0]);
+	{threeDSlider.value=0.001; threeDFiltSlider.value=300; rollsSlider.value=0;}.defer; //resets GUI positions
 };
 
 flow.nextLine;
@@ -63,7 +64,7 @@ threeDFiltSlider = EZSlider(window, 500@30, "3D Lowpass", ControlSpec(20, 20000,
 	{|val| s.sendBundle(s.latency, [\n_set, ~samplerNodes[1], \lpc, val.value]) }
 );
 flow.nextLine;
-rollsSlider = EZSlider(window, 500@30, "Particle Waves Lev", ControlSpec(0, 1, step:0.001, default:0),
+rollsSlider = EZSlider(window, 500@30, "Particle Waves Lev", ControlSpec(0, 0.3, step:0.001, default:0),
 	{|val| s.sendBundle(s.latency, [\n_set, ~samplerNodes[2], \lev, val.value]) }
 );
 flow.nextLine;

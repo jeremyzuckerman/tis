@@ -28,10 +28,11 @@ s.sendMsg(\g_new, ~sAdditivesGrp=s.nextNodeID, 0, 0);
 	/*var atk;
 	atk = rrand(30,60);
 	*/
-	s.sendMsg(\s_new, \simpleAdditive, ~sAddSynths[i+~saVoices[0]], 0, ~sAdditivesGrp, \centerPitch, 63-24, \masterLev, 0.4, \atk,  fadesIn[i], \outBus, outs[i], \atk, fadesIn[i]);
-	s.sendMsg(\s_new, \simpleAdditive, ~sAddSynths[i+~saVoices[1]], 0, ~sAdditivesGrp, \centerPitch, 63-12, \masterLev, 0.8, \atk,  fadesIn[i], \outBus, outs[i], \atk, fadesIn[i]);
-	s.sendMsg(\s_new, \simpleAdditive, ~sAddSynths[i+~saVoices[2]], 0, ~sAdditivesGrp, \centerPitch, 63, \masterLev, 0.8, \atk,  fadesIn[i], \outBus, outs[i], \atk, fadesIn[i]);
-}
+	s.sendBundle(s.latency, [\s_new, \simpleAdditive, ~sAddSynths[i+~saVoices[0]], 0, ~sAdditivesGrp, \centerPitch, 63-24, \masterLev, 0.4, \atk,  fadesIn[i], \outBus, outs[i], \atk, fadesIn[i]]
+		, [\s_new, \simpleAdditive, ~sAddSynths[i+~saVoices[1]], 0, ~sAdditivesGrp, \centerPitch, 63-12, \masterLev, 0.8, \atk,  fadesIn[i], \outBus, outs[i], \atk, fadesIn[i]]
+		, [\s_new, \simpleAdditive, ~sAddSynths[i+~saVoices[2]], 0, ~sAdditivesGrp, \centerPitch, 63, \masterLev, 0.8, \atk,  fadesIn[i], \outBus, outs[i], \atk, fadesIn[i]]
+	);
+	}
 )
 
 //2: FM for all voices (polyphonic)
@@ -52,6 +53,11 @@ s.sendBundle(s.latency, [\n_set, ~sAddSynths[3], \fmIndex, 0.025, \fmIndexLag, 6
 	, [\n_set, ~sAddSynths[3+~saVoices[2]], \fmIndex, 0.025, \fmIndexLag, 60, \fmNoiseIndex, 0.025, \fmNoiseIndexLag, 20]);
 
 
+
+//FADE OUT
+s.sendMsg(\n_set, ~sAdditivesGrp, \gate, 0, \release, 60) //fade out and free
+
+
 /*//2:
 //FM first voices only (monophonic)
 s.sendMsg(\n_set, ~sAddSynths[0], \fmIndex, 0.025, \fmIndexLag, 60, \fmNoiseIndex, 0.025, \fmNoiseIndexLag, 20);//'
@@ -59,7 +65,7 @@ s.sendMsg(\n_set, ~sAddSynths[1], \fmIndex, 0.025, \fmIndexLag, 60, \fmNoiseInde
 s.sendMsg(\n_set, ~sAddSynths[2], \fmIndex, 0.025, \fmIndexLag, 60, \fmNoiseIndex, 0.025, \fmNoiseIndexLag, 20);//'
 s.sendMsg(\n_set, ~sAddSynths[3], \fmIndex, 0.025, \fmIndexLag, 60, \fmNoiseIndex, 0.025, \fmNoiseIndexLag, 20);//'*/
 
-
+///////////////////////////////////////////////////////////////////////
 (
 //adjust levels of high or low octave. octave=0 low notes, octave=1 high notes
 var arr, octave=0, nodes;
