@@ -45,6 +45,14 @@ cp = [63];
 //FADE OUT ALL ADDITIVES:
 ~additivesGrp.set(\rel, 30, \gate, 0);
 
+//fade out all but 1st group (~s1)
+7.do{|i|
+~addInternalGrps[i+1].set(\rel, 30, \gate, 0);
+};
+
+//fade out 1st group
+~addInternalGrps[0].set(\rel, 30, \gate, 0);
+
 /////////////////////////////////
 ///////////OTHER SHIT///////////
 
@@ -73,11 +81,6 @@ cp = [63];
 
 ~additivesGrp.set(\masterLev, 0);
 ~additivesGrp.set(\gate, 0);
-
-//fade out all but 1st group (~s1)
-7.do{|i|
-~addInternalGrps[i+1].set(\rel, 60, \gate, 0);
-}
 
 ~s7.set(\baseModRate, 0.1, \lag, 30); //musical parameters
 ~s7.set(\floor, 0, \floorLag, 0.1); //" (depth of the AM, lag)

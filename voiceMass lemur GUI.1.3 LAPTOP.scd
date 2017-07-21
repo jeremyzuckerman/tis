@@ -174,16 +174,16 @@ MIDIdef.noteOn(\xpPads, {|vel, nn|
 		var node, density;
 
 		switch(densSw,
-			0, {density = rrand(175, 220)}, //v.high density
-			1, {density = rrand(100, 150)}, //high density
-			2, {density = rrand(40, 60)}, //med density
+			0, {density = rrand(100, 150)}, //v.high density
+			1, {density = rrand(60, 90)}, //high density
+			2, {density = rrand(40, 50)}, //med density
 			3, {density = rrand(5, 10)} //low density
 		);
 
 		s.sendMsg(\g_new, group, 0, 0); //create a group for the instrument
 
 		density.do{|i|
-			if (s.avgCPU<90){
+			if (s.peakCPU<90){
 			var duration, rateVal, file, spLo, spHi, startPos;
 			rateVal = rrand(rateLo, rateHi)*xpose;
 			if (listVal==~voiceMassBuffer.size){file=rrand(0, listVal-1).asInteger}{file=listVal};
@@ -200,7 +200,7 @@ MIDIdef.noteOn(\xpPads, {|vel, nn|
 
 			//	s.sendBundle(s.latency+duration, [\n_set, node, \gate, 0]); //kill automatically
 			//vmList.add(node);
-			//0.001.wait;
+			0.01.wait; //does this help lighten the load on the interpreter?
 			}{"CPU TOO HIGH".postln};
 	}}
 }

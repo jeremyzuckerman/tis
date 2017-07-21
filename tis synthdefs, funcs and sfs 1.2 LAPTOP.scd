@@ -76,7 +76,7 @@ SynthDef(\simpleAdditive, { |outBus=0, masterLev=1, mlLag=1, centerPitch=67, cpL
 ////////////
 //ADDITIVES:
 
-//2 voices. fixed pan pos w FM for each channel
+/*//2 voices. fixed pan pos w FM for each channel
 SynthDef(\additive1, { |out=100, masterLev=1, centerPitch=67, atk=0.1, rel=1, amp=1, gate=1, freqModRate=0.001, fmIndexStart=0, fmIndexEnd=0.025, fmIndexDur=30|
 	var in, env;
 	var fmIndex;
@@ -97,7 +97,7 @@ SynthDef(\additive1, { |out=100, masterLev=1, centerPitch=67, atk=0.1, rel=1, am
 	);
 	env = EnvGen.kr(Env.asr(atk, amp, rel, curve:[4, -4]), gate, doneAction:2);
 	Out.ar(out, in*env*masterLev )
-}).add;
+}).add;*/
 
 //2 voices. fixed pan pos w FM for each channel
 SynthDef(\additive1RM, { |out=100, masterLev=1, direct=1, directLag=0.1, centerPitch=67, pitchLag=0.1, atk=0.1, rel=1, amp=1, gate=1, freqModRate=0.001, fmIndexStart=0, fmIndexEnd=0.025, fmIndexDur=30, rmRate=10, rmRateLag=0.1, rmLag=0.05|
@@ -140,7 +140,7 @@ SynthDef(\additive1RM, { |out=100, masterLev=1, direct=1, directLag=0.1, centerP
 	Out.ar(out, Mix.ar([dry, wet])*env*masterLev);
 }).add;
 
-//monophonic. LFNoise2 for FM and uses a panner
+/*//monophonic. LFNoise2 for FM and uses a panner
 SynthDef(\additive2, {|out=100, masterLev=1, centerPitch=67, atk=0.1, rel=1, amp=1, gate=1, panRateScale=1|
 	var in, env;
 	in = PanAz.ar(4,
@@ -163,7 +163,7 @@ SynthDef(\additive2, {|out=100, masterLev=1, centerPitch=67, atk=0.1, rel=1, amp
 	);
 	env = EnvGen.kr(Env.asr(atk, amp, rel, curve:[4, -4]), gate, doneAction:2);
 	Out.ar(out, in*env*masterLev);
-}).add;
+}).add;*/
 
 //monophonic. SinOsc for FM and uses a panner
 SynthDef(\additive3, {|out=100, masterLev=1, centerPitch=68, atk=0.1, rel=1, amp=1, gate=1, modDepth=0.025, panRateScale=1|

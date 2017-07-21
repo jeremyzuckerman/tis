@@ -149,7 +149,7 @@ s.sendMsg(\n_set, ~eggAdditivesGrp, \wetDry, 1, \wdLag, (60*3)*~eggTimeScale); /
 //8: bring in Serge 032315)
 
 //9: fade out last voices of Egg
-s.sendBundle(s.latency, [\n_set, ~eggAdditivesGrp, \gate, 0, \release, 120]);
+s.sendBundle(s.latency, [\n_set, ~eggAdditivesGrp, \gate, 0, \release, 120*~eggTimeScale]);
 
 (
 ~eggNumVoices.do{|i|

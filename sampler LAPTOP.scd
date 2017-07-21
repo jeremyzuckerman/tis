@@ -64,7 +64,7 @@ threeDFiltSlider = EZSlider(window, 500@30, "3D Lowpass", ControlSpec(20, 20000,
 	{|val| s.sendBundle(s.latency, [\n_set, ~samplerNodes[1], \lpc, val.value]) }
 );
 flow.nextLine;
-rollsSlider = EZSlider(window, 500@30, "Particle Waves Lev", ControlSpec(0, 0.3, step:0.001, default:0),
+rollsSlider = EZSlider(window, 500@30, "Slow Rolls Lev", ControlSpec(0, 0.3, step:0.001, default:0),
 	{|val| s.sendBundle(s.latency, [\n_set, ~samplerNodes[2], \lev, val.value]) }
 );
 flow.nextLine;
