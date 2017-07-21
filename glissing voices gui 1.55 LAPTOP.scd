@@ -20,19 +20,15 @@ var oscMl, lemurMl=1, lemurLpCut=20000, filterNode;
 // send to the Lemur: iPad IP address
 // ~tisAddy = NetAddr.new("169.254.23.107", 8000); //when using JZ Adhoc network
 
-~tisAddy.sendMsg("/GvLev/x", 0);
+/*~tisAddy.sendMsg("/GvLev/x", 0);
 ~tisAddy.sendMsg("/MasterLev/x", 0);
-~tisAddy.sendMsg("/Density/x", 0);
+~tisAddy.sendMsg("/Density/x", 0);*/
 
 s.sendMsg(\g_new, ~gvGroup1 = s.nextNodeID, 0, 0); //create a group for the instrument
 ~gvList = List.new; //scope!!!
 
 s.sendMsg(\s_new, \filter, filterNode=s.nextNodeID, 1, ~gvGroup1); //filter at tail of group
 
-// oscMl = OSCFunc.new({|msg| lemurMl=msg[1].value.pow(2); s.sendMsg(\n_set, ~gvGroup, \masterLev, lemurMl) }, "/GvLev/x", nil, 57121);
-//oscMl = OSCFunc.new({|msg| lemurLpCut=(msg[1].value.pow(2)*20000)+20; s.sendBundle(s.latency, [\n_set, filterNode, \lpCut, lemurLpCut]) }, "/GvLev/x", nil, 57121);
-
-//var ff, forte, mf, mp, piano, pp;
 
 states = [
 	"FF h.d.", "FF m.d.", "FF l.d.", "FF 1",
