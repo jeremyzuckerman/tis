@@ -30,6 +30,9 @@ s.sendMsg(\g_new, ~sAdditivesGrp=s.nextNodeID, 3, ~group);
 ~counter.value; //start counter
 
 (
+var lev;
+lev=0.8;
+
 "simple additives".postln;
 
 //START SIMPLE ADDITIVES
@@ -37,9 +40,9 @@ s.sendMsg(\g_new, ~sAdditivesGrp=s.nextNodeID, 3, ~group);
 	/*var atk;
 	atk = rrand(30,60);
 	*/
-	s.sendBundle(s.latency, [\s_new, \simpleAdditive, ~sAddSynths[i+~saVoices[0]], 0, ~sAdditivesGrp, \centerPitch, 63-24+~saXpose, \masterLev, 0.4, \atk, ~ fadesIn[i], \outBus, ~outs[i], \atk, ~fadesIn[i]]
-		, [\s_new, \simpleAdditive, ~sAddSynths[i+~saVoices[1]], 0, ~sAdditivesGrp, \centerPitch, 63-12+~saXpose, \masterLev, 0.8, \atk,  ~fadesIn[i], \outBus, ~outs[i], \atk, ~fadesIn[i]]
-		, [\s_new, \simpleAdditive, ~sAddSynths[i+~saVoices[2]], 0, ~sAdditivesGrp, \centerPitch, 63+~saXpose, \masterLev, 0.8, \atk,  ~fadesIn[i], \outBus, ~outs[i], \atk, ~fadesIn[i]]
+	s.sendBundle(s.latency, [\s_new, \simpleAdditive, ~sAddSynths[i+~saVoices[0]], 0, ~sAdditivesGrp, \centerPitch, 63-24+~saXpose, \masterLev, lev*0.5, \atk, ~ fadesIn[i], \outBus, ~outs[i], \atk, ~fadesIn[i]]
+		, [\s_new, \simpleAdditive, ~sAddSynths[i+~saVoices[1]], 0, ~sAdditivesGrp, \centerPitch, 63-12+~saXpose, \masterLev, lev, \atk,  ~fadesIn[i], \outBus, ~outs[i], \atk, ~fadesIn[i]]
+		, [\s_new, \simpleAdditive, ~sAddSynths[i+~saVoices[2]], 0, ~sAdditivesGrp, \centerPitch, 63+~saXpose, \masterLev, lev, \atk,  ~fadesIn[i], \outBus, ~outs[i], \atk, ~fadesIn[i]]
 	);
 	}
 )
