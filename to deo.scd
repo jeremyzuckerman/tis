@@ -7,3 +7,5 @@ then top voices begins to amp follow voice mass and fade away
 voice mass source emerges from follower
 follower fades
 */
+
+//make doc just off releases for additives. will trigger and mix with lemur and release with code?

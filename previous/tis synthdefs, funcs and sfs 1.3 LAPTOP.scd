@@ -22,7 +22,7 @@ var sfs;
 	////////////
 	//ADDITIVES
 	~addAmp = 0.4;
-	~timeScale = 20; //scales the attack time to 20 for the performance
+	~timeScale = 10; //scales the attack time to 20 for the performance
 
 	~instances1 = 1;
 	~instances2 = 8;
@@ -43,6 +43,7 @@ var sfs;
 
 	//////////////
 	//GROUPS
+	fork{
 	s.sendBundle(s.latency, [\g_new, ~group=s.nextNodeID, 0, 0] //1 very first group (voiceMass)
 		, [\g_new, ~xpGroup=s.nextNodeID, 3, ~group]//2 (voiceMass)
 		, [\g_new, ~sAdditivesGrp=s.nextNodeID, 3, ~xpGroup] //3 simple additive grp
@@ -50,9 +51,13 @@ var sfs;
 		, [\g_new, ~eggAdditivesGrp=s.nextNodeID, 0, 0] //EGG
 		, [\g_new, ~gvGroup1 = s.nextNodeID, 0, 0] //glissing Voices
 	);
+		0.2.wait;
+
 	~addInternalGrps = Array.fill(8, {Group.new(~additivesGrp, \addToHead)}); //groups for each voice. Follower in last grp (nested grps)
-	~flutter = Synth.tail(~additivesGrp, \flutter, [\direct, 1, \deviation, 0.001]);//deviation can only be set at init. deviation 0<=x<1
+
+	~flutter = Synth.tail(~additivesGrp, \flutter, [\direct, 1, \deviation, 0.001, \afAtk, 0.04, \afRel, 0.04]);//deviation can only be set at init. deviation 0<=x<1
 	"groups created".postln;
+	}
 };
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -94,7 +99,7 @@ SynthDef(\jpverb, {|inBus=16, decay=5, damp=0.5, size=1.5, earlyDiff=0.6, modDep
 
 ///////////////////
 //SIMPLE ADDITIVES:
-SynthDef(\simpleAdditive, { |outBus=0, masterLev=1, mlLag=1, centerPitch=67, cpLag=0.1, atk=0.1, release=30, amp=1, gate=1, freqModRate=0.00001, fmModRateLag=30, fmIndex=0, fmNoiseIndex=0, fmIndexLag=30, fmNoiseIndexLag=30, amRate=0.0333333, amDepth=0, amLag=0.1, afBus=130, afAmount=0, afAtk=0.01, afRel=0.01|
+SynthDef(\simpleAdditive, { |outBus=0, masterLev=1, mlLag=1, centerPitch=67, cpLag=0.1, atk=0.1, release=30, amp=1, gate=1, freqModRate=0.00001, fmModRateLag=30, fmIndex=0, fmNoiseIndex=0, fmIndexLag=30, fmNoiseIndexLag=30, amRate=0.0333333, amDepth=0, amLag=0.1, afBus=130, afAmount=0, afAtk=0.01, afRel=0.01, masterLev2=1|
 	var in, env, triLev=0.1;
 	var fmIndexMod;
 	var ampMod;
@@ -130,7 +135,7 @@ SynthDef(\simpleAdditive, { |outBus=0, masterLev=1, mlLag=1, centerPitch=67, cpL
 	env = EnvGen.kr(Env.asr(atk, amp, release, curve:[4, -4]), gate, doneAction:2);
 	outSig = (in-triLev)*env;
 	ampFoll = Amplitude.ar(In.ar(afBus, 4), afAtk, afRel, mul:afAmount, add:1-afAmount);
-	Out.ar(outBus, outSig*Lag2.kr(masterLev, mlLag)*ampFoll); //mono
+	Out.ar(outBus, outSig*Lag2.kr(masterLev, mlLag)*ampFoll*masterLev2); //mono
 }).send(s);
 
 ////////////
@@ -160,11 +165,12 @@ Out.ar(out, in*env*masterLev )
 }).add;*/
 
 //2 voices. fixed pan pos w FM for each channel
-SynthDef(\additive1RM, { |out=100, masterLev=1, direct=1, directLag=0.1, centerPitch=67, pitchLag=0.1, atk=0.1, rel=1, amp=1, gate=1, freqModRate=0.001, fmIndexStart=0, fmIndexEnd=0.025, fmIndexDur=30, rmRate=10, rmRateLag=0.1, rmLag=0.05|
+SynthDef(\additive1RM, { |out=100, masterLev=1, lev=1, direct=1, directLag=0.1, centerPitch=67, pitchLag=0.1, atk=0.1, rel=1, amp=1, gate=1, freqModRate=0.001, fmIndexStart=0, fmIndexEnd=0.025, fmIndexDur=30, rmRate=10, rmRateLag=0.1, rmLag=0.05, send=16, sendLev=0.5|
 	var in, env;
 	var fmIndex;
 	var dry, wet;
 	var noiseMod;
+	var output;
 
 	fmIndex = Line.kr(fmIndexStart, fmIndexEnd, fmIndexDur);
 	in = LFTri.ar(
@@ -197,7 +203,9 @@ SynthDef(\additive1RM, { |out=100, masterLev=1, direct=1, directLag=0.1, centerP
 	);
 	dry = in*Lag2.kr(direct, directLag);
 	wet = (in*noiseMod)*(1-Lag2.kr(direct, directLag));
-	Out.ar(out, Mix.ar([dry, wet])*env*masterLev);
+	output = Mix.ar([dry, wet])*env*masterLev*lev;
+	Out.ar(out, output);
+	//Out.ar(send, output*sendLev);
 }).add;
 
 /*//monophonic. LFNoise2 for FM and uses a panner
@@ -226,8 +234,8 @@ Out.ar(out, in*env*masterLev);
 }).add;*/
 
 //monophonic. SinOsc for FM and uses a panner
-SynthDef(\additive3, {|out=100, masterLev=1, centerPitch=68, atk=0.1, rel=1, amp=1, gate=1, modDepth=0.025, panRateScale=1|
-	var in, env;
+SynthDef(\additive3, {|out=100, masterLev=1, lev=1, centerPitch=68, atk=0.1, rel=1, amp=1 gate=1, modDepth=0.025, panRateScale=1, send=16, sendLev=0.5|
+	var in, env, output;
 	in = PanAz.ar(4,
 		LFTri.ar(centerPitch.midicps
 			*
@@ -247,12 +255,14 @@ SynthDef(\additive3, {|out=100, masterLev=1, centerPitch=68, atk=0.1, rel=1, amp
 		)
 	);
 	env = EnvGen.kr(Env.asr(atk, amp, rel, curve:[4, -4]), gate, doneAction:2);
-	Out.ar(out, in*env*masterLev);
+	output = in*env*masterLev*lev;
+	Out.ar(out, output);
+	//Out.ar(send, output*sendLev);
 }).add;
 
 //monophonic. SinOsc for FM with a Line on the depth (index of modulation)
-SynthDef(\additive4, {|out=100, masterLev=1, centerPitch=72, atk=0.1, rel=1, amp=1, gate=1, panRate=1, panStartPos=0, lineStart=10, lineEnd=1, lineDur=70|
-	var in, env;
+SynthDef(\additive4, {|out=100, masterLev=1, lev=1, centerPitch=72, atk=0.1, rel=1, amp=1, gate=1, panRate=1, panStartPos=0, lineStart=10, lineEnd=1, lineDur=70, send=16, sendLev=0.5|
+	var in, env, output;
 	in = PanAz.ar(4,
 		LFTri.ar(centerPitch.midicps
 			*
@@ -274,16 +284,18 @@ SynthDef(\additive4, {|out=100, masterLev=1, centerPitch=72, atk=0.1, rel=1, amp
 		)
 	);
 	env = EnvGen.kr(Env.asr(atk, amp, rel, curve:[4, -4]), gate, doneAction:2);
-	Out.ar(out, in*env*masterLev);
+	output = in*env*masterLev*lev;
+	Out.ar(out, output);
+	//Out.ar(send, output*sendLev);
 }).add;
 
 //FLUTTER (output of additives)
-SynthDef(\flutter, {|inBus=100, direct=1, directLag=0.1, gate=1, atk=0.1, rel=0.1, tremRate=20, tremRateLag=0.1, tremDepth=1, deviation=0.5, pulseShape=0.01, psLag=0.1, pulseWidth=0.5, pwLag=0.1, afBus=130, afAmount=0, afAtk=0.01, afRel=0.01|
+SynthDef(\flutter, {|inBus=100, direct=1, directLag=0.1, gate=1, atk=0.1, rel=0.1, tremRate=20, tremRateLag=0.1, tremDepth=1, deviation=0.5, pulseShape=0.01, psLag=0.1, pulseWidth=0.5, pwLag=0.1, afBus=130, afAmount=0, afAtk=0.01, afRel=0.01, send=16, sendLev=0.5|
 	var in, trem;
 	var wet, dry;
 	var width, shape, phase, pulsePhase=0;
 	var wetDry;
-	var ampFoll;
+	var ampFoll, output;
 
 	phase = Control.names(\pphase).kr(Array.fill(4, pulsePhase));
 	wetDry = Lag2.kr(direct, directLag);
@@ -303,7 +315,9 @@ SynthDef(\flutter, {|inBus=100, direct=1, directLag=0.1, gate=1, atk=0.1, rel=0.
 	dry = in*wetDry;
 	wet = in*Lag2.ar(trem, shape)*(1-wetDry);
 	ampFoll = Amplitude.ar(In.ar(afBus, 4), afAtk, afRel, mul:afAmount, add:1-afAmount); //send from VoiceMass bus 130
-	Out.ar(0, Mix.ar([dry, wet])*ampFoll);
+	output = Mix.ar([dry, wet])*(ampFoll*6);
+	Out.ar(0, output);
+	Out.ar(send, output*sendLev);
 }).send(s);
 
 ////////////

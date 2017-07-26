@@ -53,3 +53,6 @@ window.front;
 
 CmdPeriod.add({window.close})
 )
+/*
+~samplerRotation.value(20, 10)*/
+s.sendMsg(\n_set, ~sergeNode, \amAmount, 1, \panRate, 5)
