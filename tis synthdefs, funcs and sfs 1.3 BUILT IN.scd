@@ -2,6 +2,63 @@
 (
 var sfs;
 
+~grps = {
+	//GROUPS, GLOBALS
+
+	//////////////////
+	//SIMPLE ADDITIVE
+	var polyphony=3, timeScale = 2;
+
+	~saXpose = -4.3;
+	~saFadeTimeScale=2; //better as 1??
+
+	~saVoices = Array.fill(polyphony, {|i| 4*i}); //offsets the nodes to group as follows: nodes 1-4: low voice; nodes 5-8 middle voice; nodes 9-12:high voice
+
+	~fadesIn = #[ 45, 67.5, 90, 112.5 ]*~saFadeTimeScale;
+	~outs = #[0, 2, 3, 1]; //L, RS, LS, R
+
+	~sAddSynths = Array.fill(4*polyphony, {s.nextNodeID}); //make node for each synth
+
+	////////////
+	//ADDITIVES
+	~addAmp = 0.4;
+	~timeScale = 1; //scales the attack time to 20 for the performance
+
+	~instances1 = 1;
+	~instances2 = 8;
+	~instances3 = 6;
+	~instances4 = 20;
+	~instances5 = 8;
+	~instances6 = 20;
+
+	~addXPose = -4.3;
+
+	~cp = Array.fill(4, 63);
+
+	//////
+	//EGG
+	~eggNumVoices = 60;
+	~ppo=0; //pan position offset
+	~eggTimeScale = 1;
+
+	//////////////
+	//GROUPS
+	s.sendBundle(s.latency, [\g_new, ~group=s.nextNodeID, 0, 0] //1 very first group (voiceMass)
+		, [\g_new, ~xpGroup=s.nextNodeID, 3, ~group]//2 (voiceMass)
+		, [\g_new, ~sAdditivesGrp=s.nextNodeID, 3, ~xpGroup] //3 simple additive grp
+		, [\g_new, ~additivesGrp=s.nextNodeID, 3, ~sAdditivesGrp] //4 master Additives Grp
+		, [\g_new, ~eggAdditivesGrp=s.nextNodeID, 0, 0] //EGG
+		, [\g_new, ~gvGroup1 = s.nextNodeID, 0, 0] //glissing Voices
+	);
+	~addInternalGrps = Array.fill(8, {Group.new(~additivesGrp, \addToHead)}); //groups for each voice. Follower in last grp (nested grps)
+	~flutter = Synth.tail(~additivesGrp, \flutter, [\direct, 1, \deviation, 0.001]);//deviation can only be set at init. deviation 0<=x<1
+	"groups created".postln;
+};
+
+///////////////////////////////////////////////////////////////////////////////////
+//SYNTH DEFS:
+///////////////////////////////////////////////////////////////////////////////////
+
 ///////////
 //REORDER
 //change the channel order from L,R,C,LFE,LS,RS to L,R,RS,LS,C,LFE. must be at the tail
@@ -10,8 +67,8 @@ SynthDef(\reorder1, {|inBus=0, subLev=1|
 	in = In.ar(inBus, 6);
 	sub = Mix.ar([in])*subLev; //send all to sub
 
-	//chans = [ in[0], in[1], in[4], sub, in[3], in[2] ]; //THIS WHEN NOT USING THE BUILT IN STEREO OUT WITH PLOGUE
-	chans = [ in[0], in[1], in[2], sub, in[4], in[5] ]; //THIS FOR PERFORMANCE AND WHEN USING ENSEMBLE WITHOUT PLOGUE
+	chans = [ in[0], in[1], in[4], sub, in[3], in[2] ]; //THIS WHEN NOT USING THE BUILT IN STEREO OUT WITH PLOGUE
+	//chans = [ in[0], in[1], in[2], sub, in[4], in[5] ]; //THIS FOR PERFORMANCE AND WHEN USING ENSEMBLE WITHOUT PLOGUE
 
 	ReplaceOut.ar(0, chans);
 }).send(s);
@@ -37,11 +94,12 @@ SynthDef(\jpverb, {|inBus=16, decay=5, damp=0.5, size=1.5, earlyDiff=0.6, modDep
 
 ///////////////////
 //SIMPLE ADDITIVES:
-SynthDef(\simpleAdditive, { |outBus=0, masterLev=1, mlLag=1, centerPitch=67, cpLag=0.1, atk=0.1, release=30, amp=1, gate=1, freqModRate=0.00001, fmModRateLag=30, fmIndex=0, fmNoiseIndex=0, fmIndexLag=30, fmNoiseIndexLag=30, amRate=0.0333333, amDepth=0, amLag=0.1|
+SynthDef(\simpleAdditive, { |outBus=0, masterLev=1, mlLag=1, centerPitch=67, cpLag=0.1, atk=0.1, release=30, amp=1, gate=1, freqModRate=0.00001, fmModRateLag=30, fmIndex=0, fmNoiseIndex=0, fmIndexLag=30, fmNoiseIndexLag=30, amRate=0.0333333, amDepth=0, amLag=0.1, afBus=130, afAmount=0, afAtk=0.01, afRel=0.01|
 	var in, env, triLev=0.1;
 	var fmIndexMod;
 	var ampMod;
 	var outSig, phase;
+	var ampFoll;
 
 	phase = Rand(0, 2pi);
 
@@ -71,7 +129,8 @@ SynthDef(\simpleAdditive, { |outBus=0, masterLev=1, mlLag=1, centerPitch=67, cpL
 	);
 	env = EnvGen.kr(Env.asr(atk, amp, release, curve:[4, -4]), gate, doneAction:2);
 	outSig = (in-triLev)*env;
-	Out.ar(outBus, outSig*Lag2.kr(masterLev, mlLag))
+	ampFoll = Amplitude.ar(In.ar(afBus, 4), afAtk, afRel, mul:afAmount, add:1-afAmount);
+	Out.ar(outBus, outSig*Lag2.kr(masterLev, mlLag)*ampFoll); //mono
 }).send(s);
 
 ////////////
@@ -79,25 +138,25 @@ SynthDef(\simpleAdditive, { |outBus=0, masterLev=1, mlLag=1, centerPitch=67, cpL
 
 /*//2 voices. fixed pan pos w FM for each channel
 SynthDef(\additive1, { |out=100, masterLev=1, centerPitch=67, atk=0.1, rel=1, amp=1, gate=1, freqModRate=0.001, fmIndexStart=0, fmIndexEnd=0.025, fmIndexDur=30|
-	var in, env;
-	var fmIndex;
+var in, env;
+var fmIndex;
 
-	fmIndex = Line.kr(fmIndexStart, fmIndexEnd, fmIndexDur);
-	in = LFTri.ar(centerPitch.midicps
-		*
-		SinOsc.kr(
-			LFNoise2.kr(
-				Array.fill(4, freqModRate)
-			)
-			, 0
-			, fmIndex
-			, 1
-		)
-		, 0
-		, 0.1
-	);
-	env = EnvGen.kr(Env.asr(atk, amp, rel, curve:[4, -4]), gate, doneAction:2);
-	Out.ar(out, in*env*masterLev )
+fmIndex = Line.kr(fmIndexStart, fmIndexEnd, fmIndexDur);
+in = LFTri.ar(centerPitch.midicps
+*
+SinOsc.kr(
+LFNoise2.kr(
+Array.fill(4, freqModRate)
+)
+, 0
+, fmIndex
+, 1
+)
+, 0
+, 0.1
+);
+env = EnvGen.kr(Env.asr(atk, amp, rel, curve:[4, -4]), gate, doneAction:2);
+Out.ar(out, in*env*masterLev )
 }).add;*/
 
 //2 voices. fixed pan pos w FM for each channel
@@ -109,7 +168,7 @@ SynthDef(\additive1RM, { |out=100, masterLev=1, direct=1, directLag=0.1, centerP
 
 	fmIndex = Line.kr(fmIndexStart, fmIndexEnd, fmIndexDur);
 	in = LFTri.ar(
-		Lag2.kr(Control.names(\cp).kr(Array.fill(4, 63).midicps), pitchLag)
+		Lag2.kr(centerPitch.midicps, pitchLag)
 		*
 		SinOsc.kr(
 			LFNoise2.kr(
@@ -143,27 +202,27 @@ SynthDef(\additive1RM, { |out=100, masterLev=1, direct=1, directLag=0.1, centerP
 
 /*//monophonic. LFNoise2 for FM and uses a panner
 SynthDef(\additive2, {|out=100, masterLev=1, centerPitch=67, atk=0.1, rel=1, amp=1, gate=1, panRateScale=1|
-	var in, env;
-	in = PanAz.ar(4,
-		LFTri.ar(centerPitch.midicps
-			*
-			SinOsc.kr(
-				LFNoise2.kr(1/10)
-				, 0.5pi
-				, 0.05
-				, 1
-			)
-			, 0
-			, 0.05
-		)
-		, SinOsc.ar(
-			Rand(1/6, 1/3)*panRateScale
-			, Rand(-8pi, 8pi) //use Rand, not rrand
-			, 2
-		)
-	);
-	env = EnvGen.kr(Env.asr(atk, amp, rel, curve:[4, -4]), gate, doneAction:2);
-	Out.ar(out, in*env*masterLev);
+var in, env;
+in = PanAz.ar(4,
+LFTri.ar(centerPitch.midicps
+*
+SinOsc.kr(
+LFNoise2.kr(1/10)
+, 0.5pi
+, 0.05
+, 1
+)
+, 0
+, 0.05
+)
+, SinOsc.ar(
+Rand(1/6, 1/3)*panRateScale
+, Rand(-8pi, 8pi) //use Rand, not rrand
+, 2
+)
+);
+env = EnvGen.kr(Env.asr(atk, amp, rel, curve:[4, -4]), gate, doneAction:2);
+Out.ar(out, in*env*masterLev);
 }).add;*/
 
 //monophonic. SinOsc for FM and uses a panner
@@ -218,11 +277,13 @@ SynthDef(\additive4, {|out=100, masterLev=1, centerPitch=72, atk=0.1, rel=1, amp
 	Out.ar(out, in*env*masterLev);
 }).add;
 
-SynthDef(\flutter, {|inBus=100, direct=1, directLag=0.1, gate=1, atk=0.1, rel=0.1, tremRate=20, tremRateLag=0.1, tremDepth=1, deviation=0.5, pulseShape=0.01, psLag=0.1, pulseWidth=0.5, pwLag=0.1|
+//FLUTTER (output of additives)
+SynthDef(\flutter, {|inBus=100, direct=1, directLag=0.1, gate=1, atk=0.1, rel=0.1, tremRate=20, tremRateLag=0.1, tremDepth=1, deviation=0.5, pulseShape=0.01, psLag=0.1, pulseWidth=0.5, pwLag=0.1, afBus=130, afAmount=0, afAtk=0.01, afRel=0.01|
 	var in, trem;
 	var wet, dry;
 	var width, shape, phase, pulsePhase=0;
 	var wetDry;
+	var ampFoll;
 
 	phase = Control.names(\pphase).kr(Array.fill(4, pulsePhase));
 	wetDry = Lag2.kr(direct, directLag);
@@ -241,7 +302,80 @@ SynthDef(\flutter, {|inBus=100, direct=1, directLag=0.1, gate=1, atk=0.1, rel=0.
 	in = In.ar(inBus, 4);
 	dry = in*wetDry;
 	wet = in*Lag2.ar(trem, shape)*(1-wetDry);
-	Out.ar(0, Mix.ar([dry, wet]));
+	ampFoll = Amplitude.ar(In.ar(afBus, 4), afAtk, afRel, mul:afAmount, add:1-afAmount); //send from VoiceMass bus 130
+	Out.ar(0, Mix.ar([dry, wet])*ampFoll);
+}).send(s);
+
+////////////
+//FOLLOWER
+SynthDef(\follower, {|outBus=0, inBus=130, atk=0.1, rel=0.1, lev=1, gate=1, band1Lev=4, band2Lev=1, band3Lev=0.05, band4Lev=0.01, lag=0.01, send=16, sendLev=0.5|
+
+	var out, pitches, amp, source;
+	var low, mid, midHigh, high, oscs;
+
+	//source = PlayBuf.ar(1, c.bufnum, loop:1);
+	source = In.ar(130, 4);
+	amp = Amplitude.ar(source, 0.2, 0.2)*lev;
+	low = Lag.kr(
+		Pitch.kr(
+			LPF.ar(
+				LPF.ar(source, 250)
+				, 250
+			)
+		)
+		, lag);
+	mid = Lag.kr(
+		Pitch.kr(
+			LPF.ar(
+				LPF.ar(
+					HPF.ar(
+						HPF.ar(source, 250)
+						, 250
+					)
+					, 500
+				)
+				, 500)
+			, minFreq:250)
+		, lag);
+	midHigh = Lag.kr(
+		Pitch.kr(
+			LPF.ar(
+				LPF.ar(
+					HPF.ar(
+						HPF.ar(source, 500)
+						, 500)
+					, 1000
+				)
+				, 1000)
+			, minFreq:500)
+		, lag);
+	high = Lag.kr(
+		Pitch.kr(
+			LPF.ar(
+				LPF.ar(
+					HPF.ar(
+						HPF.ar(source, 1000)
+						, 1000)
+					, 2000)
+				, 2000)
+			, minFreq:1000)
+		, lag);
+	/*
+	oscs = SinOsc.ar([low, low*Rand(0.99, 1.01)])+SinOsc.ar([mid, mid*Rand(0.99, 1.01)])+SinOsc.ar([midHigh, midHigh*Rand(0.99, 1.01)])+(SinOsc.ar([high*Rand(0.99, 1.01)])*0);*/
+	oscs =
+	LPF.ar((SinOsc.ar(low) * band1Lev ), 100)
+	+ LPF.ar(HPF.ar((SinOsc.ar(mid) * band2Lev ), 400), 500)
+	+ LPF.ar(HPF.ar((SinOsc.ar(midHigh) * band3Lev), 600), 1000)
+	+ LPF.ar(HPF.ar((SinOsc.ar(high) * band4Lev), 1000), 2000)
+	;
+
+	out = (oscs*amp)
+	*
+	EnvGen.kr(Env.asr(atk, 1, rel, [4,-4]), gate, levelScale:lev, doneAction:2);
+
+	Out.ar(outBus, out);
+	Out.ar(send, out*sendLev);
+
 }).send(s);
 
 ///////////
@@ -277,11 +411,13 @@ SynthDef(\sampler, {|outBus=0, bufnum=0, lev=1, lpc=20000, atk=0.01, sus=1, rel=
 		//only does this once:
 		if (i==0){
 			"initializing".postln;
+			~grps.value;
 			MIDIClient.init; //initialize
 			MIDIIn.connectAll; //connects to all available devices
-			{~reorderWindow.value}.defer;
-			~reorder = Synth.tail(s, \reorder1);
+/*			{~reorderWindow.value}.defer;
+			~reorder = Synth.tail(s, \reorder1);*/
 			~verb = Synth.before(~reorder, \jpverb);
+			~spinningSergeMIDI.value; //initialize spinning serge midi
 		}{nil};
 	}
 )
@@ -308,23 +444,21 @@ sfs  = Array.fill(~vmFiles.size, {SoundFile.new});
 ~voiceMassMarkers = Array.fill(~vmFiles.size, {|i| sfs[i].extractMarkersAiff2(0)}); //0=samples (default), 1=seconds)
 
 //SynthDefs
-SynthDef(\pb_voiceMass, {|out=0, bufnum=0, rate=1, startPos=0, panPos=0, gestureLev=1, masterLev =0.5, atk=0.01, dur=1, rel=0.01, curve= -4, send=16, dryLev=1, sendLev=1, gate=1, loop=0, mlLag=0.01|
-	var in, env;
+SynthDef(\pb_voiceMass, {|out=0, bufnum=0, rate=1, startPos=0, panPos=0, gestureLev=1, masterLev =0, atk=0.01, dur=1, rel=0.01, curve= -4, send=16, dryLev=1, sendLev=1, gate=1, loop=0, mlLag=0.01, afBus=130|
+	var in, env, output;
 	env = Env.asr(atk, 1, rel, curve);
 	in = HPF.ar(PlayBuf.ar(1, bufnum, BufRateScale.kr(bufnum)*rate, startPos:startPos, loop:loop, doneAction:2), 20);
 	env = EnvGen.kr(env, gate:gate, levelScale:gestureLev, doneAction:2);
+	output = PanAz.ar(4, in, panPos)*env;
 	//dry:
 	Out.ar(out,
-		PanAz.ar(4, in, panPos, dryLev*Lag2UD.kr(masterLev, mlLag))
-		*
-		env;
+		output*dryLev*Lag2UD.kr(masterLev, mlLag)
 	);
 	//wet:
 	Out.ar(send,
-		PanAz.ar(4, in, panPos, sendLev*Lag2UD.kr(masterLev, mlLag))
-		*
-		env
+		output*sendLev*Lag2UD.kr(masterLev, mlLag)
 	);
+	Out.ar(afBus, output*5); //sends amplitude to additives
 }).send(s);
 
 //////////////////
@@ -476,9 +610,38 @@ SynthDef(\eggAM, {|inBus=110, posOffset=0, ppoLag=0.1, wetDry=1, wdLag|
 	Out.ar(0, out)
 }).send(s);
 
+/////////////////
+//SPINNING SERGE
+//edit file so it loops perfectly!!
+//lemur: start/stop, lev, hpCut
+SynthDef(\spinningSerge, {|out=0, bufnum=0, atk=0.1, rel=0.1, masterLev=1, gate=0, hpCut=5000|
+	var pb, file, in;
+
+	file = ~bufArr[3];
+	pb = PlayBuf.ar(1, file.bufnum, BufRateScale.kr(file.bufnum), loop:1);
+	in = 	DelayN.ar(
+			PitchShift.ar(pb, 0.2, 0.5, mul:1.5)+(pb*1)
+			, 0.2
+			, [0.2,0.3,0,0.1]
+			, 1
+		);
+
+	Out.ar(0, HPF.ar(in, hpCut)
+		*
+		EnvGen.kr(Env.asr(atk, 1, rel, [4, -4]), gate, doneAction:0)
+		*masterLev
+	)
+}).send(s);
+
+
+///////////////////////////////////////////////////////////////////////////////////
+//FUNCTIONS:
+///////////////////////////////////////////////////////////////////////////////////
+
 ////////////////////////////
 //filter and rotation functions:
 //open the filter
+
 ~eggOpen = {
 	var wait, bassWait;
 
@@ -645,4 +808,44 @@ SynthDef(\eggAM, {|inBus=110, posOffset=0, ppoLag=0.1, wetDry=1, wdLag|
 
 	CmdPeriod.add({window.close})
 };
+
+~counter = {
+	fork{
+		var occurence=15;
+		inf.do{|i|
+			"counter: ".post; (occurence*i).asTimeString2.postln;
+			occurence.wait;
+		}
+	};
+};
+
+~spinningSergeMIDI = {
+	//s.sendMsg(\s_new, \spinningSerge, ~ssNode=s.nextNodeID, 0, 0, \gate, 0, \lev, 1);
+	MIDIdef.cc(\ssOnOff, {|vel, nn|
+		switch(nn
+			, 12, {
+				if (vel.value==1){s.sendMsg(\s_new, \spinningSerge, ~ssNode=s.nextNodeID, 0, 0, \gate, 1, \masterLev, 0); "spinning serge".postln;};
+				if (vel.value==0){s.sendMsg(\n_set, ~ssNode, \gate, 0); "ss stopped".postln;}
+				//vel.value.postln;
+			}
+		)
+	});
+/*	MIDIdef.noteOn(\ssOnOff, {|vel, nn|
+		switch(nn
+			, 10, {
+				if (vel.value==1){s.sendMsg(\s_new, ~ssNode=s.nextNodeID, 0, 0, \gate, 1); "spinning serge".postln;};
+			}
+			, 11, {
+				if (vel.value==1){s.sendMsg(\n_set, ~ssNode, \gate, 0); "ss stopped".postln;}
+			}
+		)
+	});*/
+
+	MIDIdef.cc(\ssLev, {|vel, nn|
+		switch(nn
+			, 10, {s.sendMsg(\n_set, ~ssNode, \masterLev, vel/127); vel.postln}
+			, 11, {s.sendMsg(\n_set, ~ssNode, \hpCut, (vel/127).pow(2)*4075+25); vel.postln}
+		)
+	});
+}
 )

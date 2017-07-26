@@ -1,6 +1,6 @@
 //transpose based on simple additive transposition value
-(
-//1
+/*(
+//FIRST!!! (moved to 'groups, globals')
 var cp;
 
 //ADDITIVES Globals
@@ -14,30 +14,33 @@ var cp;
 ~instances5 = 8;
 ~instances6 = 20;
 
-~addXPose = 0;
+~addXPose = -4.3;
 
 cp = Array.fill(4, 63);
 
 ~additivesGrp=Group.new; //master Additives group
 ~addInternalGrps = Array.fill(8, {Group.new(~additivesGrp, \addToHead)}); //groups for each voice
 
-//MAKE A SEQUENCE USING FORK TO ADD EACH ARRAY  GRADUALLY (or perform manually)
-~s1 = Array.fill(~instances1, {|i| Synth.head(~addInternalGrps[0], \additive1RM, [\out, 100, \masterLev, ~addAmp, \amp, 0.5, \centerPitch, cp.choose+~addXPose, \atk, rrand(3.0, 7.0)*~timeScale]) });
-
 ~flutter = Synth.tail(~additivesGrp, \flutter, [\direct, 1, \deviation, 0.001]);//deviation can only be set at init. deviation 0<=x<1
-)
+)*/
 
+//~cp = Array.fill(4, 63);
+
+~timeScale = 20; //scales the attack time to 20 for the performance
+
+//////////
 //LAYERS:
-/*~s2 = Array.fill(~instances2, {|i| Synth.head(~addInternalGrps[1], \additive2, [\masterLev, ~addAmp, \centerPitch, 63, \atk, rrand(3.0, 7.0)*~timeScale]) });*/
+//1
+~s1 = Array.fill(~instances1, {|i| Synth.head(~addInternalGrps[0], \additive1RM, [\out, 100, \masterLev, ~addAmp, \amp, 0.5, \centerPitch, ~cp.choose+~addXPose, \atk, rrand(3.0, 7.0)*~timeScale]) });
 
-//2
-~s3 = Array.fill(~instances3, {|i| Synth.head(~addInternalGrps[2], \additive3, [\masterLev, ~addAmp, \centerPitch, 64+~addXPose, \atk, rrand(3.0, 7.0)*~timeScale]) });
+//4
+~s4 = Array.fill(~instances4, {|i| Synth.head(~addInternalGrps[3], \additive4, [\masterLev, ~addAmp, \centerPitch, 68+~addXPose, \atk, rrand(6.0, 7.0)*~timeScale, \panRate, rrand(1/6,1/3), \panStartPos, rrand(-8pi, 8pi)]) });
 
 //3
 ~s5 = Array.fill(~instances5, {|i| Synth.head(~addInternalGrps[4], \additive3, [\masterLev, ~addAmp, \centerPitch, 69+~addXPose, \atk, rrand(3.0, 7.0)*~timeScale, \modDepth, 0.035]) });
 
-//4
-~s4 = Array.fill(~instances4, {|i| Synth.head(~addInternalGrps[3], \additive4, [\masterLev, ~addAmp, \centerPitch, 68+~addXPose, \atk, rrand(6.0, 7.0)*~timeScale, \panRate, rrand(1/6,1/3), \panStartPos, rrand(-8pi, 8pi)]) });
+//2
+~s3 = Array.fill(~instances3, {|i| Synth.head(~addInternalGrps[2], \additive3, [\masterLev, ~addAmp, \centerPitch, 64+~addXPose, \atk, rrand(3.0, 7.0)*~timeScale]) });
 
 //5
 ~s7 = Array.fill(50, {|i| Synth.head(~addInternalGrps[6], \additive3, [\masterLev, 0.5, \centerPitch, rrand(36, 69)+~addXPose, \atk, rrand(3.0, 7.0)*~timeScale, \modDepth, 0.035]) });
@@ -49,27 +52,14 @@ cp = Array.fill(4, 63);
 }
 );
 
-//7
+//7 (START WITH THIS???)
 //precursor to voicemass. VOICEMASS MUST BE GOING WITH MASTERLEV AT ZERO
-~s8 = Synth.head(~addInternalGrps[8], \follower, [\atk, 3.0*~timeScale, \lev, 1]);
-
-////
-~s8.set(\band3Lev, 0.1)
-~s8.set(\lag, 0.01)
-~s8.set(\lev, 0.2)
-~s8.set(\gate, 0, \rel, 60)
-~s8.set(\band1Lev, 2);
-~s8.set(\band2Lev, 1);
-~s8.set(\band3Lev, 0.05);
-~s8.set(\band4Lev, 0.01);
-
-
-// ~s8 = Array.fill(5, {|i| Synth.head(~addInternalGrps[7], \additive3, [\masterLev, 0.5, \centerPitch, [62,63,65,67,70].choose, \atk, rrand(1.0, 4.0)*~timeScale, \modDepth, 0.035]) });
+~s8 = Synth.head(~addInternalGrps[7], \follower, [\atk, 3.0*~timeScale, \lev, 0.8, \band1Lev, 1.25, \band2Lev, 0.1, \band3Lev, 0.005, \band4Lev, 0.001]);
 
 
 //////////////////////////
 //FADE OUT ALL ADDITIVES:
-~additivesGrp.set(\rel, 30, \gate, 0);
+~additivesGrp.set(\rel, 45, \gate, 0);
 ~additivesGrp.set(\rel, 1, \gate, 0); //fade out fast
 
 //FADE OUT SIMPLE ADDITIVE:
@@ -85,19 +75,28 @@ s.sendMsg(\n_set, ~sAdditivesGrp, \afAmount, 1, \afAtk, 0.04, \afRel, 0.04); //S
 ~addInternalGrps[i].set(\rel, 30, \gate, 0);
 };
 
-//FADE OUT FOLLOWER
-~s8.set(\gate, 0, \rel, 30); //fade out follower
-~s8.set(\gate, 1, \atk, 60); //fade in follower
+//FADE OUT PITCH FOLLOWER
+~s8.set(\gate, 0, \rel, 60); //fade out follower
 
 //fade out additives w voice mass pitches (~s6)
-~addInternalGrps[5].set(\rel, 30, \gate, 0);
+~addInternalGrps[5].set(\rel, 60, \gate, 0);
 
 
 //fade out 1st group (~s1)
-~addInternalGrps[0].set(\rel, 30, \gate, 0);
+~addInternalGrps[0].set(\rel, 60, \gate, 0);
 
 /////////////////////////////////
 ///////////OTHER SHIT///////////
+
+//tweaking pitch follower
+~s8.set(\band3Lev, 0.1)
+~s8.set(\lag, 0.01)
+~s8.set(\lev, 0.8)
+~s8.set(\gate, 0, \rel, 60)
+~s8.set(\band1Lev, 1.25);
+~s8.set(\band2Lev, 0.4);
+~s8.set(\band3Lev, 0.01);
+~s8.set(\band4Lev, 0.0);
 
 ~s1.size.do{|i| ~s1[i].set(\direct, 0, \directLag, 120)}; //AM wet/dry
 ~additivesGrp.set(\gate, 0, \rel, 0.1) //quickly kill additives

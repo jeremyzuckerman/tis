@@ -1,7 +1,7 @@
 //need to transpose. = tonal center of FOLLOWER
 //have to start voicemass lemur GUI first
-//COUNTER:
-(
+//COUNTER: (moved to 'groups, globals'
+/*(
 fork{
 	var occurence=15;
 	inf.do{|i|
@@ -9,30 +9,37 @@ fork{
 		occurence.wait;
 	}
 };
-)
+)*/
 
-//1:
+/*//FIRST (moved to 'groups, globals')
 (
-var outs, fadesIn, polyphony=3;
-var timeScale = 2, fadeTimeScale=1;
-var xpose = -4.3; //-5
+var polyphony=3, timeScale = 2;
+~saXpose = -4.3;
+~saFadeTimeScale=1;
 
 ~saVoices = Array.fill(polyphony, {|i| 4*i}); //offsets the nodes to group as follows: nodes 1-4: low voice; nodes 5-8 middle voice; nodes 9-12:high voice
 
-fadesIn = #[ 45, 67.5, 90, 112.5 ]*fadeTimeScale;
-outs = #[0, 2, 3, 1]; //L, RS, LS, R
+~fadesIn = #[ 45, 67.5, 90, 112.5 ]*~saFadeTimeScale;
+~outs = #[0, 2, 3, 1]; //L, RS, LS, R
 
 ~sAddSynths = Array.fill(4*polyphony, {s.nextNodeID}); //make node for each synth
 
 s.sendMsg(\g_new, ~sAdditivesGrp=s.nextNodeID, 3, ~group);
+)*/
 
+~counter.value; //start counter
+
+(
+"simple additives".postln;
+
+//START SIMPLE ADDITIVES
 4.do{|i|
 	/*var atk;
 	atk = rrand(30,60);
 	*/
-	s.sendBundle(s.latency, [\s_new, \simpleAdditive, ~sAddSynths[i+~saVoices[0]], 0, ~sAdditivesGrp, \centerPitch, 63-24+xpose, \masterLev, 0.4, \atk,  fadesIn[i], \outBus, outs[i], \atk, fadesIn[i]]
-		, [\s_new, \simpleAdditive, ~sAddSynths[i+~saVoices[1]], 0, ~sAdditivesGrp, \centerPitch, 63-12+xpose, \masterLev, 0.8, \atk,  fadesIn[i], \outBus, outs[i], \atk, fadesIn[i]]
-		, [\s_new, \simpleAdditive, ~sAddSynths[i+~saVoices[2]], 0, ~sAdditivesGrp, \centerPitch, 63+xpose, \masterLev, 0.8, \atk,  fadesIn[i], \outBus, outs[i], \atk, fadesIn[i]]
+	s.sendBundle(s.latency, [\s_new, \simpleAdditive, ~sAddSynths[i+~saVoices[0]], 0, ~sAdditivesGrp, \centerPitch, 63-24+~saXpose, \masterLev, 0.4, \atk, ~ fadesIn[i], \outBus, ~outs[i], \atk, ~fadesIn[i]]
+		, [\s_new, \simpleAdditive, ~sAddSynths[i+~saVoices[1]], 0, ~sAdditivesGrp, \centerPitch, 63-12+~saXpose, \masterLev, 0.8, \atk,  ~fadesIn[i], \outBus, ~outs[i], \atk, ~fadesIn[i]]
+		, [\s_new, \simpleAdditive, ~sAddSynths[i+~saVoices[2]], 0, ~sAdditivesGrp, \centerPitch, 63+~saXpose, \masterLev, 0.8, \atk,  ~fadesIn[i], \outBus, ~outs[i], \atk, ~fadesIn[i]]
 	);
 	}
 )
@@ -59,7 +66,7 @@ s.sendBundle(s.latency, [\n_set, ~sAddSynths[3], \fmIndex, 0.025, \fmIndexLag, 6
 //FADE OUT
 s.sendMsg(\n_set, ~sAdditivesGrp, \gate, 0, \release, 60) //fade out and free
 
-s.sendMsg(\n_set, ~sAdditivesGrp, \afAmount, 1) //amp foll from voice mass
+s.sendMsg(\n_set, ~sAdditivesGrp, \afAmount, 0) //amp foll from voice mass
 
 
 /*//2:

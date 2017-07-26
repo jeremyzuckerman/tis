@@ -7,36 +7,13 @@ TIS 0613171 Rnd FM 1-R,L GV 1
 (
 var window, flow, samplerButton, threeDBut, particleWaves, names, killBut, threeDSlider, threeDFiltSlider, rollsSlider, levs, lpcs, sergeButton;
 
-s.sendMsg(\g_new, ~samplerGroup=s.nextNodeID, 1, 0);
+"sampler".postln;
+
+s.sendMsg(\g_new, ~samplerGroup=s.nextNodeID, 3, ~sAdditivesGrp);
 
 window = Window("Sampler", 540@300);
 window.view.decorator = flow = FlowLayout(window.view.bounds, 20@20, 40@5);
-/*samplerButton = Button(window, 200@50)
-.states_([
-["Hieroglyphic Pose", Color.white, Color.blue],
-["Into 3D", Color.white, Color.black],
-["Slow Rolls", Color.red, Color.white],
-["STOP", Color.white, Color.red],
-])
-.action_({|view|
-switch(view.value,
-1, {
-s.sendBundle(s.latency, [\s_new, \sampler, ~hiero=s.nextNodeID, 0, ~samplerGroup, \bufnum, ~samplerBufs[0].bufnum])
-//"hiero".postln;
-}
-, 2,  {
-s.sendBundle(s.latency, [\s_new, \sampler, ~threeD=s.nextNodeID, 0, ~samplerGroup, \bufnum, ~samplerBufs[1].bufnum])
-//"3 D".postln;
-}
-, 3,  {
-s.sendBundle(s.latency, [\s_new, \sampler, ~slowRolls=s.nextNodeID, 0, ~samplerGroup, \bufnum, ~samplerBufs[2].bufnum])
-//"waves".postln;
-}
-, 0, {
-s.sendBundle(s.latency, [\n_set, ~samplerGroup, \gate, 0])
-}
-)
-});*/
+
 names = ["Hieroglyphic Pose", "Into 3D", "Slow Rolls"];
 levs = #[1, 0, 0];
 lpcs = #[20000, 300, 20000];
@@ -56,7 +33,7 @@ killBut.action = {
 };
 
 flow.nextLine;
-threeDSlider = EZSlider(window, 500@30, "3D Lev", ControlSpec(0.001, 1, \exp, step:0.001, default:0.001),
+threeDSlider = EZSlider(window, 500@30, "3D Lev", ControlSpec(0.001, 1, \exp, step:0.0001, default:0.001),
 	{|val| s.sendBundle(s.latency, [\n_set, ~samplerNodes[1], \lev, val.value]) }
 );
 flow.nextLine;

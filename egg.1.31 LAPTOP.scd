@@ -15,17 +15,6 @@ gradually add detail
 - add reverb
 */
 
-//COUNTER:
-/*(
-fork{
-	var occurence=15;
-	inf.do{|i|
-		"counter: ".post; (occurence*i).asTimeString2.postln;
-		occurence.wait;
-	}
-};
-)*/
-
 //1:
 //first low density, then long slow fade in high density, then bass. overlapped entrances
 (
@@ -34,9 +23,23 @@ var lPos, rPos, rsPos, lsPos, posArray;
 var ldPos, wait = 90, bassWait=240;
 var bassLPos, bassRPos, bassRSPos, bassLSPos, bassPosArray, numBass=16;
 
-~eggNumVoices = 60;
+"egg".postln;
+
+~eggCounter =	 Routine{
+		var occurence=15;
+		inf.do{|i|
+			"EGG COUNTER: ".post; (occurence*i).asTimeString2.postln;
+			occurence.wait;
+		}
+	};
+
+//moved to 'synthdefs, funcs, ...'
+/*~eggNumVoices = 60;
 ~ppo=0; //pan position offset
 ~eggTimeScale = 1;
+
+s.sendMsg(\g_new, ~eggAdditivesGrp=s.nextNodeID, 0, 0);
+s.sendMsg(\s_new, \eggAM, ~eggAM=s.nextNodeID, 1, ~eggAdditivesGrp);*/
 
 // ldPos = #[0, 1, 2, 3];
 ldPos = #[-0.25, 0.25];
@@ -56,10 +59,10 @@ posArray = lPos++rPos++rsPos++lsPos;
 ~eggLDNodes = Array.fill(8, {s.nextNodeID}); //first spatially discrete, low density voices
 ~eggAddSynths = Array.fill(~eggNumVoices, {s.nextNodeID}); //spatially disbursed, high density voices
 
-s.sendMsg(\g_new, ~eggAdditivesGrp=s.nextNodeID, 0, 0);
-s.sendMsg(\s_new, \eggAM, ~eggAM=s.nextNodeID, 1, ~eggAdditivesGrp);
+	s.sendMsg(\s_new, \eggAM, ~eggAM=s.nextNodeID, 1, ~eggAdditivesGrp); //EGG AM (after egg grp)
 
 fork{
+	~eggCounter.play; //start the egg counter
 
 	//LOW DENSITY
 	"low density".postln;
@@ -117,34 +120,40 @@ fork{
 }
 )
 
-//add counter
-//how to push a little more?? /masterLev?
-
-//2: VOICE MASS
-
-/*//3: fade in noise AM
-s.sendMsg(\n_set, ~eggAdditivesGrp, \wetDry, 1, \wdLag, (60*3)*~eggTimeScale); //fade out AM*/
-
-//4:
-~eggClose.value; //execute
-
-//when??
-//fade in internal sine wave AM
-~intAMfade.value(0.5, (60*3)*~eggTimeScale); //fade in internal sine wave AM
-
-//5: rotate clockwise
+//2: rotate clockwise
 ~eggRotation.value(1, (60*7)*~eggTimeScale);
 
-//6: rotate counterclockwise (this where it goes?)
+//3: START VOICE MASS a couple min before it feels like it needs more (around 5 min?)
+
+(//4:
+//little before tree
+//fade in internal sine wave AM
+"fading in sine wave AM...".postln;
+~intAMfade.value(0.5, (60*3)*~eggTimeScale); //fade in internal sine wave AM
+)
+
+//rotate counterclockwise (at peak)
 ~eggRotation.value(-1, (60*7)*~eggTimeScale);
 
+(
+//5:
+~eggClose.value; //execute
+
+fork{
+	(60*8).wait;
+	~eggCounter.stop;
+};
+)
+
+(
 //when??
 //fade out internal sine wave AM
+"fading out sine wave AM...".postln;
 ~intAMfade.value(0, (60*3)*~eggTimeScale); //fade out internal sine wave AM
+)
 
-
-//7: fade out noise AM
-s.sendMsg(\n_set, ~eggAdditivesGrp, \wetDry, 1, \wdLag, (60*3)*~eggTimeScale); //fade out AM
+/*//7: fade out noise AM
+s.sendMsg(\n_set, ~eggAdditivesGrp, \wetDry, 1, \wdLag, (60*3)*~eggTimeScale); //fade out AM*/
 
 //8: bring in Serge 032315)
 
@@ -189,7 +198,7 @@ s.sendMsg(\s_new, \eggAdditive, ~eggAddSynths[i], 0, ~eggAdditivesGrp, \centerPi
 	s.sendMsg(\n_set, ~eggAddSynths[i], \fmIndex, 0.025, \fmIndexLag, rrand(60, 60*4), \fmNoiseIndex, 0.025, \fmNoiseIndexLag, rrand(60, 60*4))
 }
 
-s.sendMsg(\n_set, ~eggAdditivesGrp, \gate, 0, \rel, 180)
+s.sendMsg(\n_set, ~eggAdditivesGrp, \gate, 0, \rel, 60)
 
 /*
 PanAz discrete outs (with width of 2!!):

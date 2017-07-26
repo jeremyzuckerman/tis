@@ -7,13 +7,17 @@ var sfs;
 //change the channel order from L,R,C,LFE,LS,RS to L,R,RS,LS,C,LFE. must be at the tail
 SynthDef(\reorder1, {|inBus=0, subLev=1|
 	var in, chans, sub;
+	var front, back;
+
 	in = In.ar(inBus, 6);
 	sub = Mix.ar([in])*subLev; //send all to sub
 
-	//chans = [ in[0], in[1], in[4], sub, in[3], in[2] ]; //THIS WHEN NOT USING THE BUILT IN STEREO OUT WITH PLOGUE
-	chans = [ in[0], in[1], in[2], sub, in[4], in[5] ]; //THIS FOR PERFORMANCE AND WHEN USING ENSEMBLE WITHOUT PLOGUE
+	chans = [ in[0], in[1], in[4], sub, in[3], in[2] ];
+	front = [ in[0], in[1] ];
+	back = [ in[3], in[2] ];
 
-	ReplaceOut.ar(0, chans);
+	//ReplaceOut.ar(0, chans);
+	ReplaceOut.ar(0, [front, back]);
 }).send(s);
 
 /////////
@@ -279,9 +283,10 @@ SynthDef(\sampler, {|outBus=0, bufnum=0, lev=1, lpc=20000, atk=0.01, sus=1, rel=
 			"initializing".postln;
 			MIDIClient.init; //initialize
 			MIDIIn.connectAll; //connects to all available devices
-			{~reorderWindow.value}.defer;
+			//REMEMBER TO UNCOMMENT THIS!!!!!!!!!!!!!!!!!
+/*			{~reorderWindow.value}.defer;
 			~reorder = Synth.tail(s, \reorder1);
-			~verb = Synth.before(~reorder, \jpverb);
+			~verb = Synth.before(~reorder, \jpverb);*/
 		}{nil};
 	}
 )

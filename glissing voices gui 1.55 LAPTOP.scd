@@ -17,6 +17,8 @@ var oscMl, lemurMl=1, lemurLpCut=20000, filterNode;
 
 ~gvRel=0.01;
 
+"glissing voices".postln;
+
 // send to the Lemur: iPad IP address
 // ~tisAddy = NetAddr.new("169.254.23.107", 8000); //when using JZ Adhoc network
 
@@ -24,7 +26,9 @@ var oscMl, lemurMl=1, lemurLpCut=20000, filterNode;
 ~tisAddy.sendMsg("/MasterLev/x", 0);
 ~tisAddy.sendMsg("/Density/x", 0);*/
 
-s.sendMsg(\g_new, ~gvGroup1 = s.nextNodeID, 0, 0); //create a group for the instrument
+//moved to 'groups.scd'
+//s.sendMsg(\g_new, ~gvGroup1 = s.nextNodeID, 0, 0); //create a group for the instrument
+
 ~gvList = List.new; //scope!!!
 
 s.sendMsg(\s_new, \filter, filterNode=s.nextNodeID, 1, ~gvGroup1); //filter at tail of group
