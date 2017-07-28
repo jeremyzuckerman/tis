@@ -1,3 +1,15 @@
+/*
+make lemur GUI:
+- open
+- rotation
+    - rotation rate
+    - rotation direction (1, -1)
+- sine wave moduation depth
+- sine wave modulation rate
+- close
+- fade out last voices
+*/
+
 //TRY TWO VERY SLOW ROTATIONS: one for egg and one for tree
 //1.3 adding individual amp mod (slow sines for Tree)
 //1.2 adding modulation

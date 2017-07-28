@@ -55,4 +55,6 @@ CmdPeriod.add({window.close})
 )
 /*
 ~samplerRotation.value(20, 10)*/
-s.sendMsg(\n_set, ~sergeNode, \amAmount, 1, \panRate, 5)
+s.sendMsg(\n_set, ~sergeNode, \rotationsOn, 1, \rotationRate, 0.1)
+
+s.sendMsg(\n_set, ~sergeNode, \rotationsOn, 0)
