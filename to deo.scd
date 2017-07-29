@@ -10,7 +10,6 @@ EGG: make lemur GUI:
 - fade out last voices
 
 - load everything from 'synthdefs, funcs...'
-- send to sub for every instrument (be careful not to send same material multiple times if an instrument's audio is being bussed to another instrument)
 
 - figure out how to make circles and 'waves' for ending section (try using amp follower)
     - 'waves' for bourrée section
@@ -25,4 +24,18 @@ then top voices begins to amp follow voice mass and fade away
 voice mass source emerges from follower
 follower fades
 */
+
+/*
+serge sample spatialization GUI
+pan rate
+pan depth
+rate FM rate
+rate FM depth
+mode switch (circles or waves)
+
+masterLev
+
+waves or circles (both?)
+*/
+
 

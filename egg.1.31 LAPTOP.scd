@@ -8,6 +8,9 @@ make lemur GUI:
 - sine wave modulation rate
 - close
 - fade out last voices
+
+- reverb (VERY GRADUALLY ADD REVERB and GRAD TAKE IT AWAY (w/ function?)
+- add something (mono) to help clarify the rotation (the LFPulse (phase) modulation i'm hearing?_
 */
 
 //TRY TWO VERY SLOW ROTATIONS: one for egg and one for tree

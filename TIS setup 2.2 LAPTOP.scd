@@ -109,9 +109,9 @@ button = Button(window1, Rect(0, 0, 120, 50)).states_([ ["Boot", Color.black, Co
 button.action = {
 	if(outDevVal==0){~bootFunc.value(0, sampleRate, blockSize); currentSR.value=sampleRate; currentBS.value=blockSize }
 	{~bootFunc.value(1, sampleRate, blockSize); currentSR.value=sampleRate; currentBS.value=blockSize};
-	s.waitForBoot(
-	Object.readArchive("/Projects/SC GITHUB/tis/tis synthdefs, funcs and sfs 1.5 LAPTOP.scd"); //load main file
-)
+s.waitForBoot(
+		{ Object.readArchive("/Projects/SC GITHUB/tis/tis synthdefs, funcs and sfs 1.55 LAPTOP.scd"); } //load main file
+	)
 };
 w1Flow.nextLine;
 listView2 = EZListView(window1, 150@130, "Sample Rate:",

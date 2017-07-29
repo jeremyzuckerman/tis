@@ -46,15 +46,17 @@ var sfs;
 	//////////////
 	//GROUPS
 	fork{
+		var wait=0.1;
 		s.sendBundle(s.latency
-			, [\g_new, ~group=s.nextNodeID, 0, 0] //1 very first group (voiceMass)
+			, [\g_new, ~amplitudesGrp=s.nextNodeID, 0, 0] //1st group. amplitude spatial gestures (env sources)
+			, [\g_new, ~sergeGrp=s.nextNodeID, 3, ~amplitudesGrp] //ending serge sample uses this grp
+			, [\g_new, ~group=s.nextNodeID, 3, ~sergeGrp] // (voiceMass)
 			, [\g_new, ~xpGroup=s.nextNodeID, 3, ~group]//2 (voiceMass)
-			, [\g_new, ~amplitudesGrp=s.nextNodeID, 3, ~xpGroup] //amplitude spatial gestures (env sources)
-			, [\g_new, ~sAdditivesGrp=s.nextNodeID, 3, ~amplitudesGrp] //3 simple additive grp
+			, [\g_new, ~sAdditivesGrp=s.nextNodeID, 3, ~xpGroup]//3 simple additive grp
 			, [\g_new, ~additivesGrp=s.nextNodeID, 3, ~sAdditivesGrp] //4 master Additives Grp
 			, [\g_new, ~samplerGroup=s.nextNodeID, 3, ~additivesGrp]
-			, [\g_new, ~eggAdditivesGrp=s.nextNodeID, 0, 0] //EGG
-			, [\g_new, ~gvGroup1 = s.nextNodeID, 0, 0] //glissing Voices
+			, [\g_new, ~eggAdditivesGrp=s.nextNodeID, 3, ~amplitudesGrp]//EGG
+			, [\g_new, ~gvGroup1 = s.nextNodeID, 3, ~eggAdditivesGrp] //glissing Voices
 		);
 		0.2.wait;
 
@@ -109,33 +111,49 @@ SynthDef(\jpverb, {|inBus=16, decay=5, damp=0.5, size=1.5, earlyDiff=0.6, modDep
 
 /////////////////////////////////
 //AMPLITUDES (SPATIAL GESTURES)
-SynthDef(\ampCircles, {|out=90, panrate=1, lev=1|
+SynthDef(\ampCircles, {|out=90, panrate=0.1, lev=1, gate=1, fmDepth=0, fmRateMult=1, fmRange=0.4|
+	var in;
+	var fm, fmMult, fmAdd;
+
+	fmMult = fmDepth;
+	//fmAdd = 1-fmMult;
+	fm = LFNoise2.kr(panrate*fmRateMult, (fmRange*0.5)*fmMult, 1);
+	in = PanAz.ar(
+		4
+		, Normalizer.ar(ClipNoise.ar(lev))
+		, LFSaw.kr(panrate*fm)
+	);
 	Out.ar(out
-		, PanAz.ar(
-			4
-			, ClipNoise.ar(lev)
-			, LFSaw.kr(panrate)
-		)
+		, in
+		*
+		EnvGen.kr(Env.asr(0.01, 1, 0.01), gate, doneAction:2)
 	)
 }).send(s);
 
-SynthDef(\ampFrontBack, {|out=91, modSource=0, position=0, rate=1, lev=1|
+SynthDef(\ampFrontBack, {|out=94, modSource=0, position=0, rate=0.05, lev=1, gate=1|
+	//NEED TO REFINE THIS TO FADES IN FRONT AND FADES OUT BACK
+	//add LFNoise2 to rate
 	var one, two;
 	var pos, amp, trig, mod;
+	var in;
 
 	//trig = Impulse.ar(rate);
 	mod = Select.kr(
 		modSource
-		, [ Lag.kr(LFSaw.kr(rate, 1), 0.1)
+		, [ LFSaw.kr(rate, 1)
 			, position ]
 	);
-/*	pos = EnvGen.kr(Env(#[-1, 1, 1], [1/rate, (1/rate)*3], #[1, -2]), trig);
+	/*	pos = EnvGen.kr(Env(#[-1, 1, 1], [1/rate, (1/rate)*3], #[1, -2]), trig);
 	amp = EnvGen.kr(Env(#[1, 1.3, 0], [1/rate, (1/rate)*3], #[2, -2]), trig);*/
 	one = PanAz.ar(4, ClipNoise.ar(lev), 0);
 	two = PanAz.ar(4, ClipNoise.ar(lev), 1);
 
+	in = XFade2.ar(one, two, Lag.kr(mod, 0.3), level:mod.range(1, 1.3));
+
 	Out.ar(out
-		, XFade2.ar(one, two, mod, level:mod.range(1, 1.3))
+		, in
+		*
+		EnvGen.kr(Env.asr(0.01, 1, 0.01), gate, doneAction:2)
 	)
 }).send(s);
 
@@ -390,12 +408,16 @@ SynthDef(\follower, {|outBus=0, inBus=130, atk=0.1, rel=0.1, lev=1, gate=1, band
 
 ///////////
 //SAMPLER
-SynthDef(\sampler, {|outBus=0, bufnum=0, lev=1, lpc=20000, atk=0.01, sus=1, rel=0.01, curve=4, gate=1, posOffset=0, poLag=0.1, rotationRate=0.1, rotationsOn=0|
+SynthDef(\sampler, {|outBus=0, bufnum=0, lev=1, lpc=20000, atk=0.01, sus=1, rel=0.01, curve=4, gate=1, posOffset=0, poLag=0.1, rotationRate=0.1, rotationsOn=0, inBus=90, afAmount=0, send=16, sendLev=0, masterLev=1|
 
 	var in, filt, out, quad;
 	var mult, add, panner;
 	var pan1, pan2, pan3, pan4;
 	var positions;
+	var afMult, afAdd;
+
+	afMult = afAmount;
+	afAdd = 1-afAmount;
 
 	positions = #[-0.25, 0.25, 0.75, -0.75];
 
@@ -410,9 +432,22 @@ SynthDef(\sampler, {|outBus=0, bufnum=0, lev=1, lpc=20000, atk=0.01, sus=1, rel=
 		PanAz.ar(4, filt[i], panner+positions[i])
 	})
 	*
-	EnvGen.kr(Env.asr(atk, sus, rel, curve), gate, doneAction:2);
+	EnvGen.kr(Env.asr(atk, sus, rel, curve), gate, doneAction:2)
+	*
+	Amplitude.ar(In.ar(inBus, 4), mul:afMult, add:afAdd)
+	*
+	masterLev;
 
-	Out.ar(0, out)
+	Out.ar(
+		0
+		, out
+		//, filt
+	);
+	//verb send:
+	Out.ar(
+		send
+		, out*sendLev
+	);
 }).send(s);
 
 ~samplerFiles =
@@ -1055,20 +1090,29 @@ SynthDef(\spinningSerge, {|out=0, bufnum=0, atk=0.1, rel=0.1, masterLev=1, gate=
 
 	MIDIdef.cc(\ssLev, {|vel, nn|
 		switch(nn
-			, 10, {s.sendMsg(\n_set, ~ssNode, \masterLev, vel/127); vel.postln}
-			, 11, {s.sendMsg(\n_set, ~ssNode, \hpCut, (vel/127).pow(2)*4075+25); vel.postln}
+			, 40, {s.sendMsg(\n_set, ~ssNode, \masterLev, vel/127); vel.postln}
+			, 41, {s.sendMsg(\n_set, ~ssNode, \hpCut, (vel/127).pow(2)*4075+25); vel.postln}
 		)
 	});
+
 	MIDIdef.cc(\sergeMasses, {|val, cc|
 		var midi;
 
 		midi = MIDIOut.new(0);
 
 		switch(cc
+			, 10, {
+				//switches between circles and waves
+				if (val==0){s.sendMsg(\n_set, ~sergeSample, \inBus, 90); "circles".postln;}{s.sendMsg(\n_set, ~sergeSample, \inBus, 94); "waves".postln;};
+			}
 			, 21, {
 				"serge on/off: ".post; val.postln;
 				if (val==1){
-					s.sendBundle(s.latency, [\s_new, \sampler, ~sergeNode = s.nextNodeID, 0, 0, \bufnum, ~samplerBufs.last.bufnum, \lev, 1, \rotationRate, 0.1, \rotationsOn, 0]);
+					s.sendBundle(s.latency
+						, [\s_new, \sampler, ~sergeSample=s.nextNodeID, 0, ~sergeGrp, \bufnum, ~samplerBufs.last.bufnum, \lev, 1, \rotationRate, 0.1, \rotationsOn, 0]
+						, [\s_new, \ampCircles, ~afc=s.nextNodeID, 0, ~amplitudesGrp] //amplitude circle panning
+						, [\s_new, \ampFrontBack, ~afFB=s.nextNodeID, 0, ~amplitudesGrp] //amplitude front back panning
+					);
 				}
 				{
 					s.sendBundle(s.latency, [\n_set, ~sergeNode, \gate, 0]
@@ -1096,8 +1140,49 @@ SynthDef(\spinningSerge, {|out=0, bufnum=0, atk=0.1, rel=0.1, masterLev=1, gate=
 					s.sendMsg(\n_set, ~sergeNode, \rotationsOn, 0)
 				}
 			}
+			, 42, { //pan depth
+				var depth;
+				depth = val/127;
+				s.sendMsg(\n_set, ~sergeSample, \afAmount, depth);
+				"pan depth: ".post; depth.postln;
+			}
+			, 43, { //circles rate
+				var rate;
+				rate=(((val/127).pow(2))*4.9)+0.1; //0.1 to 5
+				s.sendMsg(\n_set, ~afc, \panrate, rate);
+				"circles rate: ".post; rate.postln;
+			}
+			, 44, { //waves rate
+				var rate;
+				rate=(((val/127).pow(2))*4.95)+0.05; //0.05 to 5
+				s.sendMsg(\n_set, ~afFB, \rate, rate);
+				"waves rate: ".post; rate.postln;
+			}
+			, 45, { //FM depth (noise2)
+				var depth;
+				depth = val/127;
+				s.sendMsg(\n_set, ~afc, \fmDepth, depth);
+				"FM depth: ".post; depth.postln;
+			}
+			, 46, { //FM rate multiple)
+				var rate;
+				rate = ((val/127)*1.5)+0.5; //0.5 to 2 (0.25=1 in Lemur)
+				s.sendMsg(\n_set, ~afc, \fmRateMult, rate);
+				"FM rate multiple: ".post; rate.postln;
+			}
+			, 11, { //master level
+				var lev;
+				lev = (val/127)*2;
+				s.sendMsg(\n_set, ~sergeSample, \masterLev, lev);
+				"master level: ".post; lev.postln;
+			}
+			, 36, {
+				var sendLev;
+				sendLev=(val/127);
+				s.sendMsg(\n_set, ~sergeSample, \sendLev, sendLev)
+			}
 		)
-	});
+	})
 };
 
 //open and eval files:

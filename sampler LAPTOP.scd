@@ -9,7 +9,7 @@ var window, flow, samplerButton, threeDBut, particleWaves, names, killBut, three
 
 "sampler".postln;
 
-s.sendMsg(\g_new, ~samplerGroup=s.nextNodeID, 3, ~sAdditivesGrp);
+/*s.sendMsg(\g_new, ~samplerGroup=s.nextNodeID, 3, ~sAdditivesGrp);*/
 
 window = Window("Sampler", 540@300);
 window.view.decorator = flow = FlowLayout(window.view.bounds, 20@20, 40@5);
@@ -47,7 +47,7 @@ rollsSlider = EZSlider(window, 500@30, "Slow Rolls Lev", ControlSpec(0, 0.3, ste
 flow.nextLine;
 flow.nextLine;
 sergeButton = Button(window,200@50).states_([ ["Serge Mass ON", Color.black, Color.white], ["Serge Mass OFF", Color.white, Color.red] ]);
-sergeButton.action = { |val| if (val.value==1) {s.sendBundle(s.latency, [\s_new, \sampler, ~sergeNode = s.nextNodeID, 0, 0, \bufnum, ~samplerBufs.last.bufnum, \lev, 1]) }{s.sendBundle(s.latency, [\n_set, ~sergeNode, \gate, 0])} };
+sergeButton.action = { |val| if (val.value==1) {s.sendBundle(s.latency, [\s_new, \sampler, ~sergeSample=s.nextNodeID, 0, ~sergeGrp, \bufnum, ~samplerBufs.last.bufnum, \lev, 1]) }{s.sendBundle(s.latency, [\n_set, ~sergeSample, \gate, 0])} };
 
 window.front;
 
@@ -55,6 +55,6 @@ CmdPeriod.add({window.close})
 )
 /*
 ~samplerRotation.value(20, 10)*/
-s.sendMsg(\n_set, ~sergeNode, \rotationsOn, 1, \rotationRate, 0.1)
+/*s.sendMsg(\n_set, ~sergeNode, \rotationsOn, 1, \rotationRate, 0.1)
 
-s.sendMsg(\n_set, ~sergeNode, \rotationsOn, 0)
+s.sendMsg(\n_set, ~sergeNode, \rotationsOn, 0)*/
