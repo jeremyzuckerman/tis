@@ -136,19 +136,20 @@ fork{
 )
 
 //2: rotate clockwise
-~eggRotation.value(1, (60*7)*~eggTimeScale);
+~eggRotation.value(2, (60*7)*~eggTimeScale);
 
 //3: START VOICE MASS a couple min before it feels like it needs more (around 5 min?)
 
-(//4:
+(
+//4:
 //little before tree
 //fade in internal sine wave AM
 "fading in sine wave AM...".postln;
-~intAMfade.value(0.5, (60*3)*~eggTimeScale); //fade in internal sine wave AM
+~intAMfade.value(0.7, (60*2)*~eggTimeScale); //fade in internal sine wave AM
 )
 
 //rotate counterclockwise (at peak)
-~eggRotation.value(-1, (60*7)*~eggTimeScale);
+~eggRotation.value(-2, (60*7)*~eggTimeScale);
 
 (
 //5:
@@ -173,7 +174,7 @@ s.sendMsg(\n_set, ~eggAdditivesGrp, \wetDry, 1, \wdLag, (60*3)*~eggTimeScale); /
 //8: bring in Serge 032315)
 
 //9: fade out last voices of Egg
-s.sendBundle(s.latency, [\n_set, ~eggAdditivesGrp, \gate, 0, \release, 120*~eggTimeScale]);
+s.sendBundle(s.latency, [\n_set, ~eggAdditivesGrp, \gate, 0, \release, 180*~eggTimeScale]);
 
 (
 ~eggNumVoices.do{|i|

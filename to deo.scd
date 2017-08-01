@@ -16,16 +16,6 @@ EGG: make lemur GUI:
 */
 
 /*
-out of triangles
-follower is there underneath
-middle additives go away
-top voice additive and simple additive stay
-then top voices begins to amp follow voice mass and fade away
-voice mass source emerges from follower
-follower fades
-*/
-
-/*
 serge sample spatialization GUI
 pan rate
 pan depth
@@ -38,4 +28,32 @@ masterLev
 waves or circles (both?)
 */
 
+/*
+additives
+add flutter to gui (remove amp foll)
+- change flutter so each channel is slightly delayed
+- parameters:
+- flutter rate
+- flutter shape (lag time)
+- flutter depth
+- channel offset delay
+*/
 
+/*
+sampler
+add master LEV
+*/
+
+
+
+
+
+/*
+out of triangles
+follower is there underneath
+middle additives go away
+top voice additive and simple additive stay
+then top voices begins to amp follow voice mass and fade away
+voice mass source emerges from follower
+follower fades
+*/

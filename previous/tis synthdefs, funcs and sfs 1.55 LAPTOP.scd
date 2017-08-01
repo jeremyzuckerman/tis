@@ -10,7 +10,7 @@ var sfs;
 	//SIMPLE ADDITIVE
 	var polyphony=3, timeScale = 2;
 
-	~saXpose = -4.3;
+	~saXpose = 0;
 	~saFadeTimeScale=1;
 
 	~saVoices = Array.fill(polyphony, {|i| 4*i}); //offsets the nodes to group as follows: nodes 1-4: low voice; nodes 5-8 middle voice; nodes 9-12:high voice
@@ -32,7 +32,7 @@ var sfs;
 	~instances5 = 8;
 	~instances6 = 20;
 
-	~addXPose = -4.3;
+	~addXPose = ~saXpose;
 
 	~cp = Array.fill(4, 63);
 
@@ -499,11 +499,8 @@ SynthDef(\sampler, {|outBus=0, bufnum=0, lev=1, lpc=20000, atk=0.01, sus=1, rel=
 /////////////
 //VOICEMASS
 ~vmFiles = [
-	"/Projects/TIS/Eliza/TiS Eliza Extended Vox 04-29-17/EDITED/12 E_inhale exhale vow high pch_CLN.aif"
-	, "/Projects/TIS/Eliza/TiS Eliza Extended Vox 04-29-17/EDITED/117 E_singing text montone more air.aif"
-	/*	 , "/Projects/TIS/Eliza/TiS Eliza Extended Vox 04-29-17/EDITED/118 E_singing text monotone lower pch.aif"
-	, "/Projects/TIS/Eliza/TiS Eliza Extended Vox 04-29-17/EDITED/119 E_singing text monotone vary pchs more air.aif"
-	, "/Projects/TIS/Eliza/TiS Eliza Extended Vox 04-29-17/EDITED/120 E_singing text monotone w vib.aif"*/
+	"/Projects/Eliza/TiS Eliza Extended Vox 04-29-17/EDITED/12 E_inhale exhale vow high pch_CLN.aif",
+	"/Projects/Eliza/TiS Eliza Extended Vox 04-29-17/EDITED/117 E_singing text montone more air.aif"
 ];
 
 ~voiceMassBuffer = Array.fill(~vmFiles.size, {|i| Buffer.read(s, ~vmFiles[i])}); //a buffer for each soundfile. solves the occasional reciprocal error by preloading buffers
