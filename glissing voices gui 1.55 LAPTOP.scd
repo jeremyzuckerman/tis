@@ -14,6 +14,7 @@ var flow, buttons, states;
 var listView, listVal=0;
 var stop, overlapModes, omVal=0, atkTimeBox, atk=0.03, relTimeBox;
 var oscMl, lemurMl=1, lemurLpCut=20000, filterNode;
+var gv_window;
 
 ~gvRel=0.01;
 
@@ -43,9 +44,9 @@ states = [
 	"PP h.d.", "PP m.d.", "PP l.d.", "PP 1"
 ];
 
-w = Window("Glissing Voices", Rect(1000, 500, 560, 650));
-w.view.decorator = flow = FlowLayout(w.view.bounds, 20@20, 40@5);
-buttons = Array.fill(states.size, {|i| Button(w, Rect(0, 0, 100, 50)).states_([ [states[i], Color.black, Color.white] ]); });
+gv_window = Window("Glissing Voices", Rect(1000, 500, 560, 650));
+gv_window.view.decorator = flow = FlowLayout(gv_window.view.bounds, 20@20, 40@5);
+buttons = Array.fill(states.size, {|i| Button(gv_window, Rect(0, 0, 100, 50)).states_([ [states[i], Color.black, Color.white] ]); });
 
 //high density actions:
 #[0,4,8,12,16,20].do{|i, e|
@@ -67,29 +68,29 @@ buttons = Array.fill(states.size, {|i| Button(w, Rect(0, 0, 100, 50)).states_([ 
 
 flow.nextLine;
 
-overlapModes = ListView(w, 370@40).items_(["overlap", "INTERRUPT!"]).action_({|i| omVal=i.value});
+overlapModes = ListView(gv_window, 370@40).items_(["overlap", "INTERRUPT!"]).action_({|i| omVal=i.value});
 flow.nextLine;
 
-atkTimeBox = EZNumber(w, 150@20, "atk time", ControlSpec(0.01, 60*60, 'lin', 0.01), {|i| atk=i.value});
-relTimeBox = EZNumber(w, 150@20, "rel time", ControlSpec(0.01, 60*60, 'lin', 0.01), {|i| ~gvRel=i.value});
+atkTimeBox = EZNumber(gv_window, 150@20, "atk time", ControlSpec(0.01, 60*60, 'lin', 0.01), {|i| atk=i.value});
+relTimeBox = EZNumber(gv_window, 150@20, "rel time", ControlSpec(0.01, 60*60, 'lin', 0.01), {|i| ~gvRel=i.value});
 flow.nextLine;
 
 //chooses soundfile:
-listView = ListView(w, 370@100)
+listView = ListView(gv_window, 370@100)
 .items_(Array.fill(~gvFiles.size+1, {|i| if(i<~gvFiles.size){~gvFiles[i].basename}{"random"}}) )
 .action_({|i| listVal=i.value});
 
 10.do{flow.nextLine};
 
-stop = Button(w, Rect(0, 0, 370, 40)).states_([ ["STOP ALL", Color.black, Color.white] ]);
+stop = Button(gv_window, Rect(0, 0, 370, 40)).states_([ ["STOP ALL", Color.black, Color.white] ]);
 stop.action = {
 	s.sendBundle(s.latency, [\n_set, ~gvGroup1, \atk, atk, \rel, ~gvRel, \gate, 0]);
 	//s.sendBundle(s.latency+rel, [\g_freeAll, ~gvGroup1]);
 ~gvList.clear; //empty the list of nodes
 }; //send values to all nodes in group 4
-w.front;
+gv_window.front;
 
-CmdPeriod.add{w.close}; //close GUI on command+period
+CmdPeriod.add{gv_window.close}; //close GUI on command+period
 
 //function
 /* ideas:

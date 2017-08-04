@@ -1,18 +1,20 @@
+/* IMPORTANT:
+- move new midi into tis synthdefs, funcs... doc
+- comment out Object.readArchives
+- add particle waves
+- test
+- send MIDI from SC to turn off switches doing LONG things (e.g. egg)
+*/
+
 /*
 EGG: make lemur GUI:
 - open
 - rotation
-    - rotation rate
-    - rotation direction (1, -1)
+    - rotation rate / direction (1, -1)
 - sine wave moduation depth
-- sine wave modulation rate
+- sine wave modulation rate mult
 - close
 - fade out last voices
-
-- load everything from 'synthdefs, funcs...'
-
-- figure out how to make circles and 'waves' for ending section (try using amp follower)
-    - 'waves' for bourrée section
 */
 
 /*

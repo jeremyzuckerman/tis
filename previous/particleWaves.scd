@@ -58,7 +58,8 @@ SynthDef(\waves, {|out=0, bufnum1=0, bufnum2=1, rate=1, lev1=1, lev2=1, send=16,
 	*
 	in2Env;
 
-	pos = EnvGen.kr(Env.new(#[0, 0.5], duration1, #[-2]), gate); //pan line
+	//pos = EnvGen.kr(Env.new(#[0, 0.5], duration1, #[1.5]), gate); //pan line
+	pos = EnvGen.kr(Env.new(#[0, 0.25, 0.25, 0.5], #[0.4, 0.2, 0.4], #[-1.5, 1, -4]), gate, timeScale:duration1); //pan line
 
 	pan1 = PanAz.ar(4, in1[0]+in2[0], -0.25-pos, lev1);
 	pan2 = PanAz.ar(4, in1[1]+in2[1], 0.25+pos, lev2);
