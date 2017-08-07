@@ -106,7 +106,7 @@
 				if (val==1){
 					~eggRotation.value(~eggRotationsLemur, (60*7)*rotationScale);
 					fork{
-						(60*7)*rotationScale.wait;
+						((60*7)*rotationScale).wait;
 						~tisMidi.control(0, 50, 0); //reset lemur
 						"rotation complete.".postln;
 					};
