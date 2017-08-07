@@ -6,7 +6,16 @@ SynthDef(\pinkNoise, {|out=0|
 }).send(s);
 )
 
-x = Synth(\pinkNoise)
-x.set ( \out, 2 ) //use SPL to mute L,R,LS,RS to test sub. can't send audio only to it with current setup
+x = Synth(\pinkNoise);
+
+(
+fork{
+	4.do{|i|
+		x.set ( \out, i); //use SPL to mute L,R,LS,RS to test sub. can't send audio only to it with current setup
+		2.wait;
+		i.postln;
+	}
+};
+)
 
 x.free
